@@ -212,7 +212,7 @@
             // Exportar a Excel
             $('#btnExportarExcel').click(function() {
                 const formData = $('#formFiltros').serialize();
-                const url = "{{ route('admin.recibos.listar') }}?" + formData + "&export=excel";
+                const url = "{{ route('admin.recibos.exportar-excel') }}?" + formData;
 
                 window.location.href = url;
             });

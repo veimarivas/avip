@@ -15,6 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ConsolidadoExportTodas;
 use App\Exports\CobrosDiariosExport;
+use App\Exports\RecibosExport;
 use App\Models\Pago;
 use App\Models\Producto;
 use App\Models\User;

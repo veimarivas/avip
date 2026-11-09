@@ -42,12 +42,21 @@ class RecibosExport implements FromCollection, WithHeadings, WithMapping, WithSt
 
     public function map($pago): array
     {
+        $clienteNombre = $pago->cliente
+            ? trim(($pago->cliente->nombres ?? '') . ' ' . ($pago->cliente->apellidos ?? ''))
+            : 'N/A';
+
+        $clienteCi = $pago->cliente->ci ?? 'N/A';
+        $localidad = $pago->cliente && $pago->cliente->localidad
+            ? $pago->cliente->localidad->nombre
+            : 'N/A';
+
         return [
             $pago->recibo,
-            $pago->created_at->format('d/m/Y H:i:s'),
-            $pago->cliente->nombres . ' ' . $pago->cliente->apellidos,
-            $pago->cliente->ci,
-            $pago->cliente->localidad->nombre ?? 'N/A',
+            $pago->created_at ? $pago->created_at->format('d/m/Y H:i:s') : 'N/A',
+            $clienteNombre !== '' ? $clienteNombre : 'N/A',
+            $clienteCi,
+            $localidad,
             $pago->pago_bs,
             $pago->descuento_bs,
             $pago->pago_bs + $pago->descuento_bs,

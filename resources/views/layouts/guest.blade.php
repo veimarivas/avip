@@ -14,7 +14,7 @@
 
     <link href="{{ asset('backend/assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('backend/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('backend/assets/css/avip-theme.css') }}?v=1.0" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('backend/assets/css/avip-theme.css') }}?v=1.1" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="avip-login">
