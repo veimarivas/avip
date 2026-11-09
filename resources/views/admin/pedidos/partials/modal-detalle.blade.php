@@ -1,13 +1,18 @@
 @if ($pedido->pedidos_productos->where('procesado', '1')->count() > 0)
     <div class="modal fade" id="modalDetalleProcesado{{ $pedido->id }}" tabindex="-1"
         aria-labelledby="modalDetalleProcesadoLabel{{ $pedido->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalDetalleProcesadoLabel{{ $pedido->id }}">
-                        <i class="ri-eye-line me-2"></i>
-                        Detalle del Pedido Procesado - {{ $pedido->cliente->nombres }} {{ $pedido->cliente->apellidos }}
-                    </h5>
+                    <div>
+                        <h5 class="modal-title" id="modalDetalleProcesadoLabel{{ $pedido->id }}">
+                            <i class="ri-eye-line me-2"></i>Detalle del pedido procesado
+                        </h5>
+                        <small class="text-muted">
+                            {{ $pedido->cliente->nombres }} {{ $pedido->cliente->apellidos }}
+                            · Código {{ $pedido->codigo ?? $pedido->id }}
+                        </small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -64,8 +69,35 @@
                         $totalGeneral = $productosProcesados->sum('costo_total');
                     @endphp
 
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 col-lg-3">
+                            <div class="pedido-modal-kpi">
+                                <span>Total general</span>
+                                <strong>Bs. {{ number_format($totalGeneral, 2) }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="pedido-modal-kpi">
+                                <span>Peso real</span>
+                                <strong>{{ number_format($productosProcesados->sum('peso_real'), 2) }} kg</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="pedido-modal-kpi">
+                                <span>Cajas</span>
+                                <strong>{{ $nCajasReferencia }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="pedido-modal-kpi">
+                                <span>Productos</span>
+                                <strong>{{ $productosProcesados->count() }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
+                        <table class="table table-hover table-centered align-middle report-table table-sm mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Producto</th>

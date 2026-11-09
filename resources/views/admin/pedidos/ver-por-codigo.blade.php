@@ -1,30 +1,326 @@
 @extends('admin.dashboard')
 @section('admin')
-    <div class="container-fluid">
-        <!-- Page Title -->
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">Pedidos - Código {{ $codigo }}</h4>
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('admin.pedidos.index') }}">Pedidos</a></li>
-                            <li class="breadcrumb-item active">Código {{ $codigo }}</li>
-                        </ol>
-                    </div>
-                    <!-- Botón para reporte consolidado -->
-                    @if ($primerPedido)
-                        <a href="{{ route('admin.pedidos.reporte-consolidado', ['fecha' => $primerPedido->created_at->format('Y-m-d')]) }}"
-                            class="btn btn-info btn-sm">
-                            <i class="ri-bar-chart-line me-1"></i> Reporte Consolidado
-                        </a>
-                    @else
-                        <a href="{{ route('admin.pedidos.reporte-consolidado') }}" class="btn btn-info btn-sm">
-                            <i class="ri-bar-chart-line me-1"></i> Reporte Consolidado
-                        </a>
-                    @endif
-                </div>
+    <div class="container-fluid pedido-detalle-page">
+        <style>
+        .pedido-detalle-page .avip-welcome {
+            margin-bottom: 1.2rem;
+        }
+
+        .pedido-detalle-page .avip-welcome h1 {
+            font-size: clamp(1.65rem, 2.3vw, 2rem);
+        }
+
+        .pedido-kpi-row .avip-kpi {
+            padding: 1rem 1.05rem;
+            gap: 0.7rem;
+        }
+
+        .pedido-kpi-row .avip-kpi__icon {
+            width: 38px;
+            height: 38px;
+            flex-basis: 38px;
+            font-size: 1.05rem;
+        }
+
+        .pedido-kpi-row .avip-kpi__label {
+            font-size: 0.64rem;
+        }
+
+        .pedido-kpi-row .avip-kpi__value {
+            font-size: 1.3rem;
+        }
+
+        .pedido-kpi--date .avip-kpi__value {
+            font-size: 1.05rem;
+            white-space: nowrap;
+            letter-spacing: -0.03em;
+        }
+
+        .pedido-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .pedido-toolbar h6 {
+            font-weight: 800;
+            color: var(--avip-ink);
+        }
+
+        .pedido-toolbar .btn {
+            white-space: nowrap;
+        }
+
+        .pedido-search-group {
+            min-width: 280px;
+        }
+
+        .pedido-actions-cell .btn {
+            white-space: nowrap;
+        }
+
+        .pedido-detalle-page .report-table th,
+        .pedido-detalle-page .report-table td {
+            vertical-align: middle;
+        }
+
+        .pedido-detalle-page .modal-content {
+            border: 0;
+            border-radius: 20px;
+            box-shadow: 0 40px 80px -40px rgba(15, 36, 28, 0.6);
+            overflow: hidden;
+        }
+
+        .pedido-detalle-page .modal-header {
+            padding: 1.1rem 1.35rem;
+            background: linear-gradient(120deg, #f0f7f1, #fbfcf9);
+            border-bottom: 1px solid var(--avip-line);
+        }
+
+        .pedido-detalle-page .modal-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--avip-ink);
+        }
+
+        .pedido-detalle-page .modal-title i {
+            color: var(--avip-leaf);
+        }
+
+        .pedido-detalle-page .modal-body {
+            padding: 1.35rem;
+        }
+
+        .pedido-detalle-page .modal-footer {
+            padding: 0.95rem 1.35rem;
+            background: #fbfcf9;
+            border-top: 1px solid var(--avip-line);
+            gap: 0.5rem;
+        }
+
+        .pedido-detalle-page .modal-footer form {
+            margin: 0;
+        }
+
+        .pedido-detalle-page .modal-footer .btn-secondary {
+            background: #f4f7f2;
+            border-color: #e2e9df;
+            color: var(--avip-body);
+        }
+
+        .pedido-modal-kpi {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            height: 100%;
+            padding: 0.75rem 0.9rem;
+            border: 1px solid var(--avip-line);
+            border-radius: 14px;
+            background: #ffffff;
+        }
+
+        .pedido-modal-kpi span {
+            font-size: 0.64rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--avip-muted);
+        }
+
+        .pedido-modal-kpi strong {
+            font-family: var(--avip-font-display);
+            font-size: 1.12rem;
+            color: var(--avip-ink);
+        }
+
+        .pedido-info-tile {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            height: 100%;
+            padding: 0.8rem 0.9rem;
+            border: 1px solid var(--avip-line);
+            border-radius: 14px;
+            background: #ffffff;
+        }
+
+        .pedido-info-tile i {
+            color: var(--avip-leaf);
+        }
+
+        .pedido-info-tile span {
+            font-size: 0.64rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--avip-muted);
+        }
+
+        .pedido-info-tile strong {
+            font-size: 0.9rem;
+            color: var(--avip-ink);
+        }
+
+        .pedido-detalle-page .info-box {
+            height: 100%;
+            padding: 0.8rem 0.9rem;
+            border-left: 4px solid var(--avip-leaf);
+            border-radius: 12px;
+            background: #f6f9f4;
+        }
+
+        .pedido-detalle-page .info-box strong {
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--avip-muted);
+        }
+
+        .pedido-detalle-page .table-responsive {
+            border: 1px solid var(--avip-line);
+            border-radius: 14px;
+        }
+
+        .pedido-detalle-page .table-sm th {
+            font-size: 0.68rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #5c6f63;
+        }
+
+        .pedido-detalle-page .sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .pedido-detalle-page .sticky-bottom {
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        .pedido-detalle-page .sticky-left {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background: #ffffff;
+        }
+
+        .pedido-detalle-page .sticky-right {
+            position: sticky;
+            right: 0;
+            z-index: 5;
+            background: #ffffff;
+        }
+
+        .pedido-detalle-page .sticky-left.bg-light,
+        .pedido-detalle-page .sticky-right.bg-light {
+            background: #f6f9f4 !important;
+        }
+
+        .pedido-detalle-page .ri-spin {
+            animation: pedido-spin 1s linear infinite;
+        }
+
+        @keyframes pedido-spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .pedido-toolbar {
+                align-items: flex-start;
+            }
+
+            .pedido-search-group {
+                min-width: 100%;
+            }
+
+            .pedido-detalle-page .modal-body {
+                padding: 1rem;
+            }
+
+            .pedido-detalle-page .modal-footer {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media print {
+            .pedido-detalle-page .modal-header,
+            .pedido-detalle-page .modal-footer {
+                display: none !important;
+            }
+
+            .pedido-detalle-page .modal-dialog {
+                max-width: 100% !important;
+                margin: 0 !important;
+            }
+
+            .pedido-detalle-page .modal-content {
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            .pedido-detalle-page .modal-body {
+                padding: 0 !important;
+            }
+
+            .pedido-detalle-page .table {
+                font-size: 10px;
+            }
+
+            .pedido-detalle-page .table-responsive {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            .pedido-detalle-page .sticky-top,
+            .pedido-detalle-page .sticky-bottom,
+            .pedido-detalle-page .sticky-left,
+            .pedido-detalle-page .sticky-right {
+                position: static !important;
+            }
+        }
+    </style>
+
+        <div class="avip-welcome">
+            <div>
+                <p class="avip-welcome__eyebrow">Detalle de pedidos</p>
+                <h1>Pedido #{{ $codigo }}</h1>
+                <p>
+                    <i class="ri-map-pin-line me-1"></i>
+                    {{ $primerPedido?->localidad?->nombre ?? 'Sin localidad' }}
+                    <span class="mx-2">·</span>
+                    <i class="ri-calendar-line me-1"></i>
+                    {{ $primerPedido ? $primerPedido->created_at->format('d/m/Y') : 'Sin fecha' }}
+                    <span class="mx-2">·</span>
+                    {{ $totalPedidos }} pedidos
+                </p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-light">
+                    <i class="ri-arrow-left-line me-1"></i> Volver
+                </a>
+                @if ($primerPedido)
+                    <a href="{{ route('admin.pedidos.reporte-consolidado', ['fecha' => $primerPedido->created_at->format('Y-m-d')]) }}"
+                        class="btn btn-soft-info">
+                        <i class="ri-bar-chart-line me-1"></i> Reporte consolidado
+                    </a>
+                @else
+                    <a href="{{ route('admin.pedidos.reporte-consolidado') }}" class="btn btn-soft-info">
+                        <i class="ri-bar-chart-line me-1"></i> Reporte consolidado
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -45,51 +341,60 @@
             </div>
         @endif
 
-
-
-        <!-- Información del Grupo -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6 class="text-muted mb-1">Código</h6>
-                                    <h4 class="text-primary">{{ $codigo }}</h4>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6 class="text-muted mb-1">Fecha</h6>
-                                    <h5>{{ $primerPedido ? $primerPedido->created_at->format('d/m/Y') : 'N/A' }}</h5>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6 class="text-muted mb-1">Total Pedidos</h6>
-                                    <h5 class="text-success">{{ $totalPedidos }}</h5>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6 class="text-muted mb-1">Regulares</h6>
-                                    <h5 class="text-primary">{{ $totalPedidosRegulares }}</h5>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6 class="text-muted mb-1">Frial</h6>
-                                    <h5 class="text-success">{{ $totalPedidosFrial }}</h5>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6 class="text-muted mb-1">Frial Sofia</h6>
-                                    <h5 class="text-info">{{ $totalPedidosFrialSofia }}</h5>
-                                </div>
-                            </div>
-                        </div>
+        <div class="row g-3 pedido-kpi-row">
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="avip-kpi pedido-kpi">
+                    <span class="avip-kpi__icon"><i class="ri-hashtag"></i></span>
+                    <div>
+                        <p class="avip-kpi__label">Código</p>
+                        <p class="avip-kpi__value">{{ $codigo }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="avip-kpi pedido-kpi pedido-kpi--date">
+                    <span class="avip-kpi__icon"><i class="ri-calendar-line"></i></span>
+                    <div>
+                        <p class="avip-kpi__label">Fecha</p>
+                        <p class="avip-kpi__value">
+                            {{ $primerPedido ? $primerPedido->created_at->format('d/m/Y') : 'N/A' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="avip-kpi pedido-kpi">
+                    <span class="avip-kpi__icon"><i class="ri-shopping-basket-2-line"></i></span>
+                    <div>
+                        <p class="avip-kpi__label">Total pedidos</p>
+                        <p class="avip-kpi__value">{{ $totalPedidos }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="avip-kpi pedido-kpi">
+                    <span class="avip-kpi__icon"><i class="ri-file-list-3-line"></i></span>
+                    <div>
+                        <p class="avip-kpi__label">Regulares</p>
+                        <p class="avip-kpi__value">{{ $totalPedidosRegulares }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="avip-kpi pedido-kpi">
+                    <span class="avip-kpi__icon"><i class="ri-store-2-line"></i></span>
+                    <div>
+                        <p class="avip-kpi__label">Frial</p>
+                        <p class="avip-kpi__value">{{ $totalPedidosFrial }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="avip-kpi pedido-kpi">
+                    <span class="avip-kpi__icon"><i class="ri-star-line"></i></span>
+                    <div>
+                        <p class="avip-kpi__label">Frial Sofia</p>
+                        <p class="avip-kpi__value">{{ $totalPedidosFrialSofia }}</p>
                     </div>
                 </div>
             </div>
@@ -181,468 +486,3 @@
         </div>
     </div>
 @endsection
-
-@push('styles')
-    <style>
-        .info-box {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            border-left: 4px solid #007bff;
-        }
-
-        .producto-item {
-            background: #fff;
-            transition: all 0.3s ease;
-        }
-
-        .producto-item:hover {
-            background: #f8f9fa;
-            border-color: #007bff;
-        }
-
-        .producto-item .form-label {
-            font-size: 0.9rem;
-            color: #495057;
-        }
-
-        /* Estilos para las pestañas */
-        .nav-tabs-custom .nav-link {
-            border: none;
-            font-weight: 500;
-            color: #495057;
-            padding: 0.75rem 1.5rem;
-        }
-
-        .nav-tabs-custom .nav-link.active {
-            color: #007bff;
-            border-bottom: 3px solid #007bff;
-            background: transparent;
-        }
-
-        .nav-tabs-custom .nav-link:hover {
-            color: #007bff;
-            border-bottom: 3px solid #dee2e6;
-        }
-
-        /* Estilos mejorados para la paginación */
-        .pagination {
-            margin-bottom: 0;
-            gap: 2px;
-        }
-
-        .page-link {
-            color: #495057;
-            border: 1px solid #dee2e6;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-            border-radius: 0.375rem;
-            min-width: 38px;
-            text-align: center;
-        }
-
-        .page-item.active .page-link {
-            background-color: #007bff;
-            border-color: #007bff;
-            color: white;
-        }
-
-        .page-link:hover {
-            color: #007bff;
-            background-color: #e9ecef;
-            border-color: #dee2e6;
-        }
-
-        .page-item.disabled .page-link {
-            color: #6c757d;
-            background-color: #fff;
-            border-color: #dee2e6;
-        }
-
-        .page-item:not(.active):not(.disabled) .page-link {
-            background-color: #fff;
-        }
-    </style>
-@endpush
-
-@push('scripts')
-@endpush
-
-@push('styles')
-    <style>
-        .ri-spin {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .alert {
-            border-radius: 0.5rem;
-            border-left: 4px solid;
-        }
-
-        .alert-success {
-            border-left-color: #198754;
-        }
-
-        .alert-danger {
-            border-left-color: #dc3545;
-        }
-
-        .alert-info {
-            border-left-color: #0dcaf0;
-        }
-
-        .alert-warning {
-            border-left-color: #ffc107;
-        }
-
-        /* Estilos para el buscador */
-        .search-container {
-            min-width: 300px;
-        }
-
-        .search-container .input-group {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .search-container .form-control:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
-        }
-
-        /* Asegurar que las alertas se muestren correctamente */
-        .alert {
-            position: relative;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            z-index: 1050;
-        }
-
-        /* Estilos para las tablas de procesar */
-        .table-sm input.form-control-sm {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .table-sm th {
-            padding: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .table-sm td {
-            padding: 0.5rem;
-            vertical-align: middle;
-        }
-
-        /* Estilos para los badges de peso pedido */
-        .badge.bg-info.text-dark {
-            background-color: #d1ecf1 !important;
-            color: #0c5460 !important;
-            font-weight: 500;
-        }
-
-        /* Estilos para campos deshabilitados visualmente */
-        .text-muted {
-            font-style: italic;
-        }
-
-        /* Estilos para la alerta informativa */
-        .alert-info {
-            border-left: 4px solid #0dcaf0;
-        }
-
-        /* Estilos para la tabla de detalle */
-        .table-info {
-            background-color: #d1ecf1 !important;
-            border-left: 4px solid #0dcaf0;
-        }
-
-        .table-info td {
-            font-weight: 600;
-        }
-
-        /* Estilos para la tarjeta de resumen */
-        .card-header.bg-info {
-            background: linear-gradient(45deg, #0dcaf0, #0ba8cc) !important;
-        }
-
-        /* Mejorar la legibilidad de los textos pequeños */
-        .text-muted {
-            font-size: 0.875rem;
-        }
-
-        /* Estilos para las filas de la tabla */
-        .table-hover tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.075);
-        }
-
-        .table-light th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        /* Estilos para la tabla de ventas con scroll */
-        .table-responsive {
-            border: 1px solid #dee2e6;
-        }
-
-        /* Estilos para encabezados y pies fijos */
-        .sticky-top {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .sticky-bottom {
-            position: sticky;
-            bottom: 0;
-            z-index: 10;
-        }
-
-        .sticky-left {
-            position: sticky;
-            left: 0;
-            z-index: 5;
-            background-color: white;
-        }
-
-        .sticky-right {
-            position: sticky;
-            right: 0;
-            z-index: 5;
-            background-color: white;
-        }
-
-        .sticky-left.bg-light,
-        .sticky-right.bg-light {
-            background-color: #f8f9fa !important;
-        }
-
-        /* Estilos para la tabla */
-        .table th.text-center {
-            vertical-align: middle;
-            background-color: #f8f9fa;
-        }
-
-        .table td.text-end {
-            vertical-align: middle;
-        }
-
-        /* Estilos para estados */
-        .badge.bg-warning {
-            background-color: #ffc107 !important;
-            color: #000 !important;
-        }
-
-        .badge.bg-info {
-            background-color: #0dcaf0 !important;
-            color: #000 !important;
-        }
-
-        /* Estilos para impresión */
-        @media print {
-
-            .modal-header,
-            .modal-footer {
-                display: none !important;
-            }
-
-            .modal-dialog {
-                max-width: 100% !important;
-                margin: 0 !important;
-            }
-
-            .modal-content {
-                border: none !important;
-                box-shadow: none !important;
-            }
-
-            .modal-body {
-                padding: 0 !important;
-            }
-
-            .table {
-                font-size: 10px;
-            }
-
-            .table-responsive {
-                max-height: none !important;
-                overflow: visible !important;
-            }
-
-            .sticky-top,
-            .sticky-bottom,
-            .sticky-left,
-            .sticky-right {
-                position: static !important;
-            }
-        }
-
-        /* Mejorar la apariencia de las tarjetas */
-        .card-header.bg-primary {
-            background: linear-gradient(45deg, #007bff, #0056b3) !important;
-        }
-
-        .card-header.bg-info {
-            background: linear-gradient(45deg, #0dcaf0, #0ba8cc) !important;
-        }
-
-        /* Estilos para la tabla */
-        .table-hover tbody tr:hover {
-            background-color: rgba(0, 123, 255, 0.1);
-        }
-
-        .table-light th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        /* Estilos para la tabla de ventas con scroll */
-        .table-responsive {
-            border: 1px solid #dee2e6;
-        }
-
-        /* Estilos para encabezados y pies fijos */
-        .sticky-top {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .sticky-bottom {
-            position: sticky;
-            bottom: 0;
-            z-index: 10;
-        }
-
-        .sticky-left {
-            position: sticky;
-            left: 0;
-            z-index: 5;
-            background-color: white;
-        }
-
-        .sticky-right {
-            position: sticky;
-            right: 0;
-            z-index: 5;
-            background-color: white;
-        }
-
-        .sticky-left.bg-light,
-        .sticky-right.bg-light {
-            background-color: #f8f9fa !important;
-        }
-
-        /* Estilos para la tabla */
-        .table th.text-center {
-            vertical-align: middle;
-            background-color: #f8f9fa;
-        }
-
-        .table td.text-end {
-            vertical-align: middle;
-        }
-
-        /* Estilos para estados */
-        .badge.bg-warning {
-            background-color: #ffc107 !important;
-            color: #000 !important;
-        }
-
-        .badge.bg-info {
-            background-color: #0dcaf0 !important;
-            color: #000 !important;
-        }
-
-        /* Mejorar la apariencia de las tarjetas */
-        .card-header.bg-primary {
-            background: linear-gradient(45deg, #007bff, #0056b3) !important;
-        }
-
-        .card-header.bg-info {
-            background: linear-gradient(45deg, #0dcaf0, #0ba8cc) !important;
-        }
-
-        /* Estilos para la tabla */
-        .table-hover tbody tr:hover {
-            background-color: rgba(0, 123, 255, 0.1);
-        }
-
-        .table-light th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        /* Estilos para el botón de Excel */
-        .btn-success {
-            background: linear-gradient(45deg, #198754, #146c43);
-            border-color: #198754;
-        }
-
-        /* Estilos para el botón de deudas */
-        .btn-danger {
-            background: linear-gradient(45deg, #dc3545, #c82333);
-            border-color: #dc3545;
-        }
-
-        /* Estilos para la tabla de deudas */
-        .table-responsive {
-            border: 1px solid #dee2e6;
-        }
-
-        .table th.text-center {
-            vertical-align: middle;
-            background-color: #f8f9fa;
-        }
-
-        .table td.text-end {
-            vertical-align: middle;
-        }
-
-        /* Estilos para las tarjetas */
-        .card-header.bg-danger {
-            background: linear-gradient(45deg, #dc3545, #c82333) !important;
-        }
-
-        .card-header.bg-info {
-            background: linear-gradient(45deg, #0dcaf0, #0ba8cc) !important;
-        }
-
-        /* Estilos para la tabla */
-        .table-hover tbody tr:hover {
-            background-color: rgba(220, 53, 69, 0.1);
-        }
-
-        .table-light th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        /* Estilos para el botón de PDF */
-        .btn-primary {
-            background: linear-gradient(45deg, #007bff, #0056b3);
-            border-color: #007bff;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(45deg, #0056b3, #004085);
-            border-color: #0056b3;
-        }
-
-        /* Estilos para el formulario en línea */
-        .modal-footer form {
-            margin: 0;
-        }
-    </style>
-@endpush

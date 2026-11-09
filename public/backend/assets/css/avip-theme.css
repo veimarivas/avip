@@ -669,6 +669,11 @@ h5.card-title,
     color: var(--avip-forest) !important;
 }
 
+.btn-soft-secondary {
+    background: #eef2ee !important;
+    color: #4d6155 !important;
+}
+
 .btn-soft-success {
     background: #e6f3ec !important;
     color: #1f6a4d !important;

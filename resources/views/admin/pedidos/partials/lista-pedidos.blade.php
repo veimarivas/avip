@@ -1,24 +1,15 @@
-<style>
-    /* Agregar al final de los estilos CSS */
-    .number-cell {
-        font-family: monospace;
-        text-align: right;
-        white-space: nowrap;
-    }
 
-    /* Estilos para números con separadores de miles */
-    .formatted-number {
-        font-variant-numeric: tabular-nums;
-    }
-</style>
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h6 class="mb-0">Lista de Pedidos {{ $titulo }}</h6>
-    <div class="d-flex gap-2">
+<div class="pedido-toolbar">
+    <div>
+        <h6 class="mb-0">Pedidos {{ $titulo }}</h6>
+        <small class="text-muted">Gestiona los pedidos y genera los reportes del día</small>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
 
 
         <!-- Botón para ver ventas -->
         @if (!$pedidos->isEmpty())
-            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+            <button type="button" class="btn btn-soft-warning btn-sm" data-bs-toggle="modal"
                 data-bs-target="#modalVentas{{ $tipoPedido }}">
                 <i class="ri-bar-chart-line me-1"></i> Reporte día
             </button>
@@ -26,7 +17,7 @@
 
         <!-- Botón para reporte de deudas -->
         @if (!$pedidos->isEmpty())
-            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+            <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal"
                 data-bs-target="#modalDeudas{{ $tipoPedido }}">
                 <i class="ri-money-dollar-circle-line me-1"></i> Imprimir reporte deudas del día
             </button>
@@ -34,7 +25,7 @@
 
         <!-- Botón para reporte de detalle de pedidos -->
         @if (!$pedidos->isEmpty())
-            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal"
+            <button type="button" class="btn btn-soft-success btn-sm" data-bs-toggle="modal"
                 data-bs-target="#modalDetallePedidos{{ $tipoPedido }}">
                 <i class="ri-file-list-line me-1"></i> Imprimir reportes de pedidos concluidos
             </button>
@@ -49,7 +40,7 @@
             <input type="hidden" name="localidad_id" value="{{ request('localidad_id') }}">
             <input type="hidden" name="tipo_pedido" value="{{ $tipoPedido }}">
 
-            <div class="input-group input-group-sm" style="width: 300px;">
+            <div class="input-group input-group-sm pedido-search-group">
                 <input type="text" name="search" class="form-control"
                     placeholder="Buscar por nombre, apellido o CI..." value="{{ request('search') }}">
                 <button class="btn btn-outline-primary" type="submit">
@@ -66,12 +57,12 @@
 
         <!-- Botón para generar pedidos si no existen y está permitido -->
         @if ($pedidos->isEmpty() && $puedeGenerar)
-            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
+            <button type="button" class="btn btn-soft-success btn-sm" data-bs-toggle="modal"
                 data-bs-target="#modalGenerarPedidos{{ $tipoPedido }}">
                 <i class="ri-add-line me-1"></i> Generar Pedidos {{ $titulo }}
             </button>
         @elseif($pedidos->isEmpty() && !$puedeGenerar && $tipoPedido != 0)
-            <button type="button" class="btn btn-sm btn-secondary" disabled
+            <button type="button" class="btn btn-soft-secondary btn-sm" disabled
                 title="Solo se pueden generar pedidos {{ $titulo }} el mismo día de los pedidos regulares ({{ $fechaPedidosRegulares ?? 'N/A' }})">
                 <i class="ri-time-line me-1"></i> No disponible
             </button>
@@ -108,7 +99,7 @@
     </div>
 @else
     <div class="table-responsive">
-        <table class="table table-bordered table-hover table-sm">
+        <table class="table table-hover table-centered align-middle report-table table-sm mb-0">
             <thead class="table-light">
                 <tr>
                     <th width="50">#</th>
@@ -189,16 +180,16 @@
                                 @endif
                             </small>
                         </td>
-                        <td>
+                        <td class="pedido-actions-cell">
                             @if ($pedidoProcesado)
                                 <!-- Botón Ver Detalle - SIEMPRE DISPONIBLE -->
-                                <button type="button" class="btn btn-sm btn-info mb-1" data-bs-toggle="modal"
+                                <button type="button" class="btn btn-sm btn-soft-info mb-1" data-bs-toggle="modal"
                                     data-bs-target="#modalDetalleProcesado{{ $pedido->id }}">
                                     <i class="ri-eye-line"></i> Ver Detalle
                                 </button>
 
                                 <a href="{{ route('admin.pedidos.reporte-individual-pdf', $pedido->id) }}"
-                                    class="btn btn-sm btn-secondary mb-1" target="_blank"
+                                    class="btn btn-sm btn-soft-secondary mb-1" target="_blank"
                                     title="Imprimir reporte individual">
                                     <i class="ri-printer-line"></i> Imprimir
                                 </a>
@@ -207,7 +198,7 @@
                                     <form action="{{ route('admin.pedidos.generar-deuda', $pedido->id) }}"
                                         method="POST" class="d-inline">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-danger">
+                                        <button type="submit" class="btn btn-sm btn-soft-danger">
                                             <i class="ri-money-dollar-circle-line"></i> Generar Deuda
                                         </button>
                                     </form>
@@ -217,19 +208,19 @@
                                 @if ($tienePedidosRegistrados)
                                     <!-- Si ya está registrado: Modificar y Procesar disponibles -->
                                     <a href="{{ route('admin.pedidos.modificar-form', $pedido->id) }}"
-                                        class="btn btn-sm btn-warning mb-1">
+                                        class="btn btn-sm btn-soft-warning mb-1">
                                         <i class="ri-edit-line"></i> Modificar
                                     </a>
                                     <br>
 
                                     <a href="{{ route('admin.pedidos.procesar-form', $pedido->id) }}"
-                                        class="btn btn-sm btn-success mb-1">
+                                        class="btn btn-sm btn-soft-success mb-1">
                                         <i class="ri-settings-line"></i> Procesar
                                     </a>
                                 @else
                                     <!-- Si no está registrado: Solo Registrar disponible -->
                                     <a href="{{ route('admin.pedidos.registrar-form', $pedido->id) }}"
-                                        class="btn btn-sm btn-primary">
+                                        class="btn btn-sm btn-soft-primary">
                                         <i class="ri-edit-line"></i> Registrar
                                     </a>
                                 @endif
@@ -247,19 +238,19 @@
                                             @if ($tienePedidosRegistrados)
                                                 <!-- Si ya está registrado: Modificar y Procesar disponibles -->
                                                 <a href="{{ route('admin.pedidos.modificar-form', $pedido->id) }}"
-                                                    class="btn btn-sm btn-warning mb-1">
+                                                    class="btn btn-sm btn-soft-warning mb-1">
                                                     <i class="ri-edit-line"></i> Modificar
                                                 </a>
                                                 <br>
 
                                                 <a href="{{ route('admin.pedidos.procesar-form', $pedido->id) }}"
-                                                    class="btn btn-sm btn-success mb-1">
+                                                    class="btn btn-sm btn-soft-success mb-1">
                                                     <i class="ri-settings-line"></i> Procesar
                                                 </a>
                                             @else
                                                 <!-- Si no está registrado: Solo Registrar disponible -->
                                                 <a href="{{ route('admin.pedidos.registrar-form', $pedido->id) }}"
-                                                    class="btn btn-sm btn-primary">
+                                                    class="btn btn-sm btn-soft-primary">
                                                     <i class="ri-edit-line"></i> Registrar
                                                 </a>
                                             @endif
@@ -379,11 +370,16 @@
 
 <!-- Modal para Generar Pedidos -->
 <div class="modal fade" id="modalGenerarPedidos{{ $tipoPedido }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title">Generar Pedidos {{ $titulo }}</h5>
+                <div>
+                    <h5 class="modal-title">
+                        <i class="ri-add-circle-line me-2"></i>Generar pedidos {{ $titulo }}
+                    </h5>
+                    <small class="text-muted">{{ $localidadNombre }}</small>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="formGenerarPedidos{{ $tipoPedido }}"
@@ -394,38 +390,56 @@
                     <input type="hidden" name="localidade_id" value="{{ $localidadId }}">
                     <input type="hidden" name="tipo_pedido" value="{{ $tipoPedido }}">
 
-                    <div class="text-center">
-                        <i class="ri-information-line display-4 text-primary mb-3"></i>
-                        <h5>¿Generar Pedidos {{ $titulo }}?</h5>
-                        <p class="text-muted">
-                            Se crearán pedidos {{ $titulo }} para todos los clientes de
+                    <div class="text-center mb-3">
+                        <div class="avatar-lg mx-auto mb-3">
+                            <div class="avatar-title bg-soft-success text-success rounded-circle">
+                                <i class="ri-shopping-basket-2-line fs-2"></i>
+                            </div>
+                        </div>
+                        <h5>¿Generar pedidos {{ $titulo }}?</h5>
+                        <p class="text-muted mb-0">
+                            Se crearán pedidos para todos los clientes habilitados de
                             <strong>{{ $localidadNombre }}</strong>.
                         </p>
+                    </div>
 
-                        @if ($tipoPedido == 0)
-                            <div class="alert alert-info">
-                                <i class="ri-calendar-line me-1"></i>
-                                <strong>Pedidos Regulares:</strong> Se generan para el día siguiente
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <div class="pedido-info-tile">
+                                <span>Localidad</span>
+                                <strong>{{ $localidadNombre }}</strong>
                             </div>
-                        @else
-                            <div class="alert alert-warning">
-                                <i class="ri-calendar-event-line me-1"></i>
-                                <strong>Pedidos {{ $titulo }}:</strong> Se generan para el día actual
+                        </div>
+                        <div class="col-4">
+                            <div class="pedido-info-tile">
+                                <span>Tipo</span>
+                                <strong>{{ $titulo }}</strong>
                             </div>
-                        @endif
-
-                        <div class="mt-3 p-3 bg-light rounded">
-                            <strong>Resumen:</strong><br>
-                            - Localidad: {{ $localidadNombre }}<br>
-                            - Tipo: {{ $titulo }}<br>
-                            - Clientes: {{ $totalClientes }}
                         </div>
-
-                        <div class="alert alert-warning mt-3" id="alert-inactivos-{{ $tipoPedido }}" style="display: none;">
-                            <i class="ri-forbid-line me-2"></i>
-                            <strong>Clientes deshabilitados (no se incluirán en el pedido):</strong>
-                            <ul id="lista-inactivos-{{ $tipoPedido }}" class="mb-0 mt-2 text-start" style="max-height: 150px; overflow-y: auto;"></ul>
+                        <div class="col-4">
+                            <div class="pedido-info-tile">
+                                <span>Clientes</span>
+                                <strong>{{ $totalClientes }}</strong>
+                            </div>
                         </div>
+                    </div>
+
+                    @if ($tipoPedido == 0)
+                        <div class="alert alert-info">
+                            <i class="ri-calendar-line me-1"></i>
+                            <strong>Pedidos regulares:</strong> se generan para el día siguiente.
+                        </div>
+                    @else
+                        <div class="alert alert-warning">
+                            <i class="ri-calendar-event-line me-1"></i>
+                            <strong>Pedidos {{ $titulo }}:</strong> se generan para el día actual.
+                        </div>
+                    @endif
+
+                    <div class="alert alert-warning mb-0" id="alert-inactivos-{{ $tipoPedido }}" style="display: none;">
+                        <i class="ri-forbid-line me-2"></i>
+                        <strong>Clientes deshabilitados (no se incluirán):</strong>
+                        <ul id="lista-inactivos-{{ $tipoPedido }}" class="mb-0 mt-2 text-start" style="max-height: 150px; overflow-y: auto;"></ul>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -444,13 +458,15 @@
 <!-- Modal para Ver Ventas -->
 @if (!$pedidos->isEmpty())
     <div class="modal fade" id="modalVentas{{ $tipoPedido }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="ri-bar-chart-line me-2"></i>
-                        Detalle de Ventas - {{ $titulo }} - Código {{ $codigo }}
-                    </h5>
+                    <div>
+                        <h5 class="modal-title">
+                            <i class="ri-bar-chart-line me-2"></i>Detalle de ventas
+                        </h5>
+                        <small class="text-muted">{{ $titulo }} · Código {{ $codigo }}</small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -525,6 +541,33 @@
                             }
                         }
                     @endphp
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 col-lg-3">
+                            <div class="pedido-modal-kpi">
+                                <span>Total general</span>
+                                <strong>Bs. {{ number_format($totalGeneral, 2, ',', '.') }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="pedido-modal-kpi">
+                                <span>Clientes</span>
+                                <strong>{{ $todosClientes->count() }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="pedido-modal-kpi">
+                                <span>Con pedido</span>
+                                <strong>{{ $pedidos->count() }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="pedido-modal-kpi">
+                                <span>Productos</span>
+                                <strong>{{ count($productosUnicos) }}</strong>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
                         <table class="table table-bordered table-hover table-sm" id="tablaVentas{{ $tipoPedido }}">
@@ -741,13 +784,15 @@
 <!-- Modal para Reporte de Deudas -->
 @if (!$pedidos->isEmpty())
     <div class="modal fade" id="modalDeudas{{ $tipoPedido }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="ri-money-dollar-circle-line me-2"></i>
-                        Reporte de Deudas - {{ $titulo }} - Código {{ $codigo }}
-                    </h5>
+                    <div>
+                        <h5 class="modal-title">
+                            <i class="ri-money-dollar-circle-line me-2"></i>Reporte de deudas
+                        </h5>
+                        <small class="text-muted">{{ $titulo }} · Código {{ $codigo }}</small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -780,7 +825,31 @@
                             ->get();
 
                         $totalDeuda = $clientesConDeuda->sum('subtotal');
+                        $deudaPromedio = $clientesConDeuda->count() > 0
+                            ? number_format($totalDeuda / $clientesConDeuda->count(), 2, ',', '.')
+                            : '0,00';
                     @endphp
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 col-lg-4">
+                            <div class="pedido-modal-kpi">
+                                <span>Total deuda</span>
+                                <strong>Bs. {{ number_format($totalDeuda, 2, ',', '.') }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-4">
+                            <div class="pedido-modal-kpi">
+                                <span>Clientes con deuda</span>
+                                <strong>{{ $clientesConDeuda->count() }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-4">
+                            <div class="pedido-modal-kpi">
+                                <span>Deuda promedio</span>
+                                <strong>Bs. {{ $deudaPromedio }}</strong>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover table-sm"
@@ -883,32 +952,62 @@
 <!-- Modal para Reporte de Detalle de Pedidos -->
 @if (!$pedidos->isEmpty())
     <div class="modal fade" id="modalDetallePedidos{{ $tipoPedido }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="ri-file-list-line me-2"></i>
-                        Reporte de Detalle de Pedidos - {{ $titulo }} - Código {{ $codigo }}
-                    </h5>
+                    <div>
+                        <h5 class="modal-title">
+                            <i class="ri-file-list-line me-2"></i>Reporte de detalle de pedidos
+                        </h5>
+                        <small class="text-muted">{{ $titulo }} · Código {{ $codigo }}</small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>¿Generar reporte de detalle de pedidos <strong>PROCESADOS</strong> para {{ $titulo }} -
-                        Código {{ $codigo }}?</p>
-                    <p>Este reporte generará un PDF con una hoja por cada cliente que tenga pedidos procesados.</p>
-                    <div class="alert alert-info">
-                        <i class="ri-information-line me-2"></i>
-                        <strong>Información del Reporte:</strong><br>
-                        - Solo incluye pedidos procesados<br>
-                        - Una hoja por cliente (media carta)<br>
-                        - Detalle completo con pesos reales y costos<br>
-                        - Productos con tara consolidados como "Pollo Primera"<br>
-                        - Estado de deuda actualizado
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 col-md-3">
+                            <div class="pedido-info-tile">
+                                <span>Código</span>
+                                <strong>{{ $codigo }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="pedido-info-tile">
+                                <span>Tipo</span>
+                                <strong>{{ $titulo }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="pedido-info-tile">
+                                <span>Localidad</span>
+                                <strong>{{ $localidadNombre }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="pedido-info-tile">
+                                <span>Fecha</span>
+                                <strong>
+                                    {{ $primerPedido ? $primerPedido->created_at->format('d/m/Y') : 'N/A' }}
+                                </strong>
+                            </div>
+                        </div>
                     </div>
-                    <div class="alert alert-warning">
+
+                    <div class="pedido-info-tile mb-3">
+                        <span>El PDF incluirá</span>
+                        <ul class="mb-0 mt-2 ps-3">
+                            <li>Solo pedidos procesados.</li>
+                            <li>Una hoja por cliente (media carta).</li>
+                            <li>Pesos reales, tara y costos.</li>
+                            <li>Productos con tara consolidados como “Pollo Primera”.</li>
+                            <li>Estado de deuda actualizado.</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning mb-0">
                         <i class="ri-alert-line me-2"></i>
-                        <strong>Nota:</strong> Los cálculos se basan en los datos procesados reales (peso real, tara,
-                        costo total).
+                        <strong>Nota:</strong> los cálculos se basan en los datos procesados reales
+                        (peso real, tara y costo total).
                     </div>
                 </div>
                 <div class="modal-footer">

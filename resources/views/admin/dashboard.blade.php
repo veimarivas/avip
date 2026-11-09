@@ -7,9 +7,9 @@
 <head>
 
     <meta charset="utf-8" />
-    <title>AVIP Â· GestiÃ³n avÃ­cola</title>
+    <title>AVIP · Gestión avícola</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AVIP, sistema de gestiÃ³n de pedidos, clientes y cobros." />
+    <meta name="description" content="AVIP, sistema de gestión de pedidos, clientes y cobros." />
     <meta name="theme-color" content="#14503c" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- App favicon -->
@@ -36,7 +36,7 @@
     <!-- custom Css-->
     <link href="{{ asset('backend/assets/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- AVIP theme -->
-    <link href="{{ asset('backend/assets/css/avip-theme.css') }}?v=1.3" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('backend/assets/css/avip-theme.css') }}?v=1.4" rel="stylesheet" type="text/css" />
 
 </head>
 
@@ -91,7 +91,7 @@
                     <img src="{{ asset('backend/assets/images/avip-mark.svg') }}" alt="" class="avip-brand__mark">
                     <span class="avip-brand__text">
                         <span class="avip-brand__name">AVIP</span>
-                        <span class="avip-brand__sub">GestiÃ³n avÃ­cola</span>
+                        <span class="avip-brand__sub">Gestión avícola</span>
                     </span>
                 </a>
             </div>
@@ -144,7 +144,7 @@
     </button>
     <!--end back-to-top-->
 
-    <!-- jQuery (necesario para tu cÃ³digo AJAX y eventos) -->
+    <!-- jQuery (necesario para tu código AJAX y eventos) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
@@ -174,9 +174,9 @@
 
     <!-- App js -->
     <script src="{{ asset('backend/assets/js/app.js') }}"></script>
-    <!-- InicializaciÃ³n global (opcional, pero Ãºtil) -->
+    <!-- Inicialización global (opcional, pero útil) -->
     <script>
-        window.feather = feather; // Asegura que estÃ© en el scope global
+        window.feather = feather; // Asegura que esté en el scope global
         feather.replace();
     </script>
 
