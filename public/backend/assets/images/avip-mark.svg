@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="AVIP">
+    <defs>
+        <linearGradient id="avipMarkBg" x1="6" y1="2" x2="44" y2="46" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#1b654c"/>
+            <stop offset="1" stop-color="#0d3428"/>
+        </linearGradient>
+        <linearGradient id="avipMarkEgg" x1="16" y1="10" x2="32" y2="38" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#f6cd73"/>
+            <stop offset="1" stop-color="#e3a323"/>
+        </linearGradient>
+    </defs>
+    <rect width="48" height="48" rx="14" fill="url(#avipMarkBg)"/>
+    <path d="M24 9.5c-5.5 0-9.9 6.6-9.9 14.1 0 8.3 4.4 14.4 9.9 14.4s9.9-6.1 9.9-14.4C33.9 16.1 29.5 9.5 24 9.5Z" fill="url(#avipMarkEgg)"/>
+    <path d="M25.4 27.1c3.3-1.3 5.5-4.4 5.9-8.2-3.9.1-7.2 2.1-8.8 5.5-.8 1.7-1 3.5-.6 5.2 1.3 0 2.5-.8 3.5-2.5Z" fill="#14503c"/>
+    <circle cx="35.4" cy="13.2" r="1.7" fill="#f6cd73" opacity=".9"/>
+</svg>
