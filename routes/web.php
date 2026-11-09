@@ -131,6 +131,7 @@ Route::middleware(['auth', IsAdmin::class])->group(function () {
 
         // En el grupo de rutas PEDIDOS
         Route::get('/admin/reportes/cobros-diarios', [PedidosController::class, 'reporteCobrosDiarios'])->name('admin.reportes.cobros-diarios');
+        Route::get('/admin/reportes/cobros-diarios/exportar-excel', [PedidosController::class, 'exportarCobrosDiariosExcel'])->name('admin.reportes.cobros-diarios.exportar-excel');
         Route::post('/admin/reportes/cobros-diarios/detalles-usuario', [PedidosController::class, 'detallesCobrosUsuario'])->name('admin.reportes.cobros-diarios.detalles-usuario');
 
         Route::get('/admin/reportes/graficos-ingresos', [PedidosController::class, 'graficosIngresos'])->name('admin.reportes.graficos-ingresos');

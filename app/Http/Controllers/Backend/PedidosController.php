@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ConsolidadoExportTodas;
+use App\Exports\CobrosDiariosExport;
 use App\Models\Pago;
 use App\Models\Producto;
 use App\Models\User;
@@ -1534,6 +1535,131 @@ class PedidosController extends Controller
             'usuarioId',
             'tipoPago'
         ));
+    }
+
+    public function exportarCobrosDiariosExcel(Request $request)
+    {
+        $fecha = $request->get('fecha') ?: date('Y-m-d');
+        $usuarioId = $request->get('usuario_id', '');
+        $tipoPago = $request->get('tipo_pago', '');
+
+        [$cobrosPorUsuario, $totalesGenerales] = $this->calcularCobrosDiarios($fecha, $usuarioId, $tipoPago);
+
+        $usuarioFiltro = 'Todos';
+        if ($usuarioId) {
+            $usuarioFiltro = User::find($usuarioId)->name ?? 'Usuario';
+        }
+
+        $tipoFiltro = $tipoPago ? ucfirst($tipoPago) : 'Todos';
+
+        $filename = 'cobros-diarios-' . $fecha;
+        if ($usuarioId) {
+            $filename .= '-usuario-' . $usuarioId;
+        }
+        if ($tipoPago) {
+            $filename .= '-' . $tipoPago;
+        }
+        $filename .= '.xlsx';
+
+        return Excel::download(
+            new CobrosDiariosExport(
+                $cobrosPorUsuario,
+                $totalesGenerales,
+                $fecha,
+                $usuarioFiltro,
+                $tipoFiltro
+            ),
+            $filename
+        );
+    }
+
+    private function calcularCobrosDiarios(string $fecha, $usuarioId, $tipoPago): array
+    {
+        $query = Pago::with([
+            'usuario',
+            'cliente',
+            'detalles',
+            'pedidos' => function ($query) {
+                $query->withPivot('monto_asignado', 'descuento_asignado');
+            }
+        ])->whereDate('created_at', $fecha);
+
+        if ($usuarioId) {
+            $query->where('user_id', $usuarioId);
+        }
+
+        if ($tipoPago) {
+            $query->where('tipo', $tipoPago);
+        }
+
+        $pagos = $query->orderBy('user_id')->orderBy('created_at', 'desc')->get();
+
+        $cobrosPorUsuario = [];
+        $totalesGenerales = [
+            'efectivo' => 0,
+            'qr' => 0,
+            'parcial_efectivo' => 0,
+            'parcial_qr' => 0,
+            'descuento' => 0,
+            'total' => 0
+        ];
+
+        foreach ($pagos as $pago) {
+            $usuarioPagoId = $pago->user_id;
+            $usuarioNombre = $pago->usuario->name ?? 'Sin usuario';
+
+            if (!isset($cobrosPorUsuario[$usuarioPagoId])) {
+                $cobrosPorUsuario[$usuarioPagoId] = [
+                    'usuario' => $pago->usuario,
+                    'nombre_completo' => $usuarioNombre,
+                    'efectivo' => 0,
+                    'qr' => 0,
+                    'parcial_efectivo' => 0,
+                    'parcial_qr' => 0,
+                    'descuento' => 0,
+                    'total' => 0,
+                    'cantidad_recibos' => 0,
+                    'detalles' => []
+                ];
+            }
+
+            $cobrosPorUsuario[$usuarioPagoId]['cantidad_recibos']++;
+
+            if ($pago->tipo === 'efectivo') {
+                $cobrosPorUsuario[$usuarioPagoId]['efectivo'] += $pago->pago_bs;
+                $totalesGenerales['efectivo'] += $pago->pago_bs;
+            } elseif ($pago->tipo === 'qr') {
+                $cobrosPorUsuario[$usuarioPagoId]['qr'] += $pago->pago_bs;
+                $totalesGenerales['qr'] += $pago->pago_bs;
+            } elseif ($pago->tipo === 'parcial') {
+                foreach ($pago->detalles as $detalle) {
+                    if ($detalle->tipo === 'efectivo') {
+                        $cobrosPorUsuario[$usuarioPagoId]['parcial_efectivo'] += $detalle->pago_bs;
+                        $totalesGenerales['parcial_efectivo'] += $detalle->pago_bs;
+                    } elseif ($detalle->tipo === 'qr') {
+                        $cobrosPorUsuario[$usuarioPagoId]['parcial_qr'] += $detalle->pago_bs;
+                        $totalesGenerales['parcial_qr'] += $detalle->pago_bs;
+                    }
+                }
+            }
+
+            $cobrosPorUsuario[$usuarioPagoId]['descuento'] += $pago->descuento_bs;
+            $totalesGenerales['descuento'] += $pago->descuento_bs;
+
+            $cobrosPorUsuario[$usuarioPagoId]['total'] =
+                $cobrosPorUsuario[$usuarioPagoId]['efectivo'] +
+                $cobrosPorUsuario[$usuarioPagoId]['qr'] +
+                $cobrosPorUsuario[$usuarioPagoId]['parcial_efectivo'] +
+                $cobrosPorUsuario[$usuarioPagoId]['parcial_qr'];
+        }
+
+        $totalesGenerales['total'] =
+            $totalesGenerales['efectivo'] +
+            $totalesGenerales['qr'] +
+            $totalesGenerales['parcial_efectivo'] +
+            $totalesGenerales['parcial_qr'];
+
+        return [$cobrosPorUsuario, $totalesGenerales];
     }
 
     public function detallesCobrosUsuario(Request $request)

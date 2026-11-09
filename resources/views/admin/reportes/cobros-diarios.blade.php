@@ -299,7 +299,7 @@
             // Exportar a Excel
             $('#btnExportarExcel').click(function() {
                 const formData = $('#formFiltros').serialize();
-                const url = "{{ route('admin.reportes.cobros-diarios') }}?" + formData + "&export=excel";
+                const url = "{{ route('admin.reportes.cobros-diarios.exportar-excel') }}?" + formData;
 
                 window.location.href = url;
             });
