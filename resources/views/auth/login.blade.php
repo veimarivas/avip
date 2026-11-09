@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Ingresar · AVIP</title>
+    <title>Ingresar Â· AVIP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Acceso al sistema AVIP de gestión avícola." />
+    <meta name="description" content="Acceso al sistema AVIP de gestiÃ³n avÃ­cola." />
     <meta name="theme-color" content="#14503c" />
     <link rel="icon" type="image/svg+xml" href="{{ asset('backend/assets/images/avip-mark.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,22 +14,22 @@
 
     <link href="{{ asset('backend/assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('backend/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('backend/assets/css/avip-theme.css') }}?v=1.1" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('backend/assets/css/avip-theme.css') }}?v=1.2" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="avip-login">
     <main class="avip-login__shell">
-        <section class="avip-login__brand" aria-label="AVIP, sistema de gestión avícola">
+        <section class="avip-login__brand" aria-label="AVIP, sistema de gestiÃ³n avÃ­cola">
             <div class="avip-login__brand-inner">
                 <a href="{{ url('/') }}" class="avip-login__logo">
                     <img src="{{ asset('backend/assets/images/avip-mark.svg') }}" alt="" class="avip-brand__mark">
                     <span class="avip-login__wordmark">
                         AVIP
-                        <small>Gestión avícola</small>
+                        <small>GestiÃ³n avÃ­cola</small>
                     </span>
                 </a>
 
-                <p class="avip-login__kicker">Sistema de gestión avícola</p>
+                <p class="avip-login__kicker">Sistema de gestiÃ³n avÃ­cola</p>
                 <h1 class="avip-login__title">Del pedido al cobro, todo en orden.</h1>
                 <p class="avip-login__lead">
                     Organiza los pedidos de tus localidades, controla los cobros y consulta reportes claros,
@@ -39,7 +39,7 @@
                 <ul class="avip-login__features">
                     <li><i class="ri-shopping-basket-2-line"></i> Pedidos por localidad</li>
                     <li><i class="ri-money-dollar-circle-line"></i> Cobros y recibos</li>
-                    <li><i class="ri-bar-chart-2-line"></i> Reportes al día</li>
+                    <li><i class="ri-bar-chart-2-line"></i> Reportes al dÃ­a</li>
                 </ul>
             </div>
 
@@ -63,7 +63,7 @@
                 @if ($errors->any())
                     <div class="alert alert-danger alert-border-left mt-4 mb-0" role="alert">
                         <i class="ri-error-warning-line me-2 align-middle"></i>
-                        <strong>No pudimos iniciar sesión.</strong>
+                        <strong>No pudimos iniciar sesiÃ³n.</strong>
                         <ul class="mb-0 mt-1 ps-3">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -93,13 +93,13 @@
                     </div>
 
                     <div class="mb-1">
-                        <label for="password" class="form-label">Contraseña</label>
+                        <label for="password" class="form-label">ContraseÃ±a</label>
                         <div class="avip-login__password">
                             <input type="password" id="password" name="password"
                                 class="form-control password-input @error('password') is-invalid @enderror"
-                                placeholder="Tu contraseña" autocomplete="current-password" required>
+                                placeholder="Tu contraseÃ±a" autocomplete="current-password" required>
                             <button type="button" class="avip-login__eye password-addon"
-                                aria-label="Mostrar u ocultar contraseña">
+                                aria-label="Mostrar u ocultar contraseÃ±a">
                                 <i class="ri-eye-line"></i>
                             </button>
                         </div>
@@ -116,7 +116,7 @@
                         </div>
                         @if (Route::has('password.request'))
                             <a class="avip-login__help" href="{{ route('password.request') }}">
-                                ¿Olvidaste tu contraseña?
+                                Â¿Olvidaste tu contraseÃ±a?
                             </a>
                         @endif
                     </div>
@@ -129,10 +129,10 @@
 
                 <p class="avip-login__note">
                     <i class="ri-lock-2-line"></i>
-                    Tu sesión está protegida y se cierra al terminar.
+                    Tu sesiÃ³n estÃ¡ protegida y se cierra al terminar.
                 </p>
 
-                <p class="avip-login__copyright">© {{ date('Y') }} AVIP · Gestión avícola</p>
+                <p class="avip-login__copyright">Â© {{ date('Y') }} AVIP Â· GestiÃ³n avÃ­cola</p>
             </div>
         </section>
     </main>

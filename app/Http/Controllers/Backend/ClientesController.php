@@ -420,53 +420,103 @@ class ClientesController extends Controller
 
     public function clientesVer($id)
     {
-        $cliente = Cliente::with([
-            'localidad',
-            'pedidos' => function ($query) {
-                $query->with(['pedidos_productos'])
-                    ->orderBy('created_at', 'desc');
-            },
-            'pagos' => function ($query) {
-                $query->with(['detalles', 'pedidos.pedidos_productos'])
-                    ->orderBy('created_at', 'desc');
-            }
-        ])->findOrFail($id);
+        $cliente = Cliente::with('localidad')->findOrFail($id);
 
-        // Separar pedidos pendientes y pagados
-        $pedidosPendientes = $cliente->pedidos->filter(function ($pedido) {
-            $pagadoBs = $pedido->pagado_bs ?? 0;
-            $descuentoBs = $pedido->descuento_bs ?? 0;
-            $pendiente = $pedido->subtotal - $pagadoBs - $descuentoBs;
-            return $pendiente > 0 && $pedido->pagado == 0;
+        $pedidosPendientesBase = $this->pedidosPendientesBaseQuery($cliente->id);
+
+        $pedidosPendientes = (clone $pedidosPendientesBase)
+            ->paginate(10, ['*'], 'pendientes_page');
+
+        $pedidosPendientesTodos = $pedidosPendientesBase->get();
+
+        $pedidosPagados = $this->pedidosPagadosBaseQuery($cliente->id)
+            ->paginate(10, ['*'], 'pagados_page');
+
+        $pagos = $this->pagosClienteBaseQuery($cliente->id)
+            ->paginate(10, ['*'], 'pagos_page');
+
+        $deudaTotal = $pedidosPendientesTodos->sum(function ($pedido) {
+            return $pedido->subtotal
+                - ($pedido->pagado_bs ?? 0)
+                - ($pedido->descuento_bs ?? 0);
         });
-
-        $pedidosPagados = $cliente->pedidos->filter(function ($pedido) {
-            $pagadoBs = $pedido->pagado_bs ?? 0;
-            $descuentoBs = $pedido->descuento_bs ?? 0;
-            $pendiente = $pedido->subtotal - $pagadoBs - $descuentoBs;
-            return  $pedido->pagado == 1;
-        });
-
-        // Calcular deuda total
-        $deudaTotal = $pedidosPendientes->sum(function ($pedido) {
-            $pagadoBs = $pedido->pagado_bs ?? 0;
-            $descuentoBs = $pedido->descuento_bs ?? 0;
-            return $pedido->subtotal - $pagadoBs - $descuentoBs;
-        });
-
-        // Obtener pagos ordenados descendente por recibo
-        $pagos = $cliente->pagos()->with('detalles')
-            ->orderBy('created_at', 'desc')
-            ->orderBy('recibo', 'desc')
-            ->get();
 
         return view('admin.clientes.ver', compact(
             'cliente',
             'deudaTotal',
             'pedidosPendientes',
+            'pedidosPendientesTodos',
             'pedidosPagados',
             'pagos'
         ));
+    }
+
+    public function clientesTab(Request $request, $id, $tab)
+    {
+        $cliente = Cliente::findOrFail($id);
+        $page = max(1, (int) $request->get('page', 1));
+
+        switch ($tab) {
+            case 'pendientes':
+                $pedidosPendientes = $this->pedidosPendientesBaseQuery($cliente->id)
+                    ->paginate(10, ['*'], 'page', $page);
+
+                return response()->json([
+                    'html' => view(
+                        'admin.clientes.partials.pedidos-pendientes-table',
+                        compact('pedidosPendientes')
+                    )->render(),
+                ]);
+
+            case 'pagados':
+                $pedidosPagados = $this->pedidosPagadosBaseQuery($cliente->id)
+                    ->paginate(10, ['*'], 'page', $page);
+
+                return response()->json([
+                    'html' => view(
+                        'admin.clientes.partials.pedidos-pagados-table',
+                        compact('pedidosPagados')
+                    )->render(),
+                ]);
+
+            case 'recibos':
+                $pagos = $this->pagosClienteBaseQuery($cliente->id)
+                    ->paginate(10, ['*'], 'page', $page);
+
+                return response()->json([
+                    'html' => view(
+                        'admin.clientes.partials.recibos-table',
+                        compact('pagos')
+                    )->render(),
+                ]);
+        }
+
+        abort(404);
+    }
+
+    private function pedidosPendientesBaseQuery($clienteId)
+    {
+        return Pedido::where('cliente_id', $clienteId)
+            ->where('pagado', 0)
+            ->whereRaw('(subtotal - IFNULL(pagado_bs, 0) - IFNULL(descuento_bs, 0)) > 0')
+            ->with(['pedidos_productos', 'pagos'])
+            ->orderBy('created_at', 'desc');
+    }
+
+    private function pedidosPagadosBaseQuery($clienteId)
+    {
+        return Pedido::where('cliente_id', $clienteId)
+            ->where('pagado', 1)
+            ->with(['pedidos_productos', 'pagos'])
+            ->orderBy('created_at', 'desc');
+    }
+
+    private function pagosClienteBaseQuery($clienteId)
+    {
+        return Pago::where('cliente_id', $clienteId)
+            ->with(['detalles', 'pedidos'])
+            ->orderBy('created_at', 'desc')
+            ->orderBy('recibo', 'desc');
     }
 
     public function rankingDeudas(Request $request)

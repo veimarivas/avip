@@ -56,6 +56,9 @@ Route::middleware(['auth', IsAdmin::class])->group(function () {
         Route::delete('/admin/clientes/eliminar', 'clientesEliminar')->name('admin.clientes.eliminar');
         Route::post('/admin/clientes/cambiar-estado', 'clienteCambiarEstado')->name('admin.clientes.cambiar-estado');
         Route::get('/admin/clientes/ver/{id}', 'clientesVer')->name('admin.clientes.ver');
+        Route::get('/admin/clientes/{id}/tab/{tab}', 'clientesTab')
+            ->where('tab', 'pendientes|pagados|recibos')
+            ->name('admin.clientes.tab');
         Route::get('/admin/clientes/por-localidad/{localidadId}', 'clientesPorLocalidad')->name('admin.clientes.por-localidad');
 
         // Nuevas rutas para gestión de pagos

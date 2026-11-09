@@ -1,35 +1,5 @@
 @extends('admin.dashboard')
 @section('admin')
-    <style>
-        /* Estilos para los badges de tipo de pedido en el modal */
-        .badge {
-            padding: 0.25em 0.5em;
-            font-size: 0.75em;
-            font-weight: 600;
-            border-radius: 0.25rem;
-        }
-
-        .badge.bg-primary {
-            background-color: #405189 !important;
-            color: white;
-        }
-
-        .badge.bg-success {
-            background-color: #0ab39c !important;
-            color: white;
-        }
-
-        .badge.bg-info {
-            background-color: #299cdb !important;
-            color: white;
-        }
-
-        /* Para hacer los badges más pequeños en tablas compactas */
-        .table-sm .badge {
-            padding: 0.15em 0.35em;
-            font-size: 0.65em;
-        }
-    </style>
     <div class="container-fluid">
         <!-- Page Title -->
         <div class="row mb-3">
@@ -103,7 +73,7 @@
                                         </div>
                                     </div>
                                     <div class="flex-grow-1 ms-3">
-                                        <p class="text-muted mb-1">Órden</p>
+                                        <p class="text-muted mb-1">Orden</p>
                                         <h4 class="mb-0">{{ $cliente->orden }}</h4>
                                     </div>
                                 </div>
@@ -123,394 +93,53 @@
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link active" data-bs-toggle="tab" href="#pedidos-pendientes" role="tab">
                                     <i class="ri-alarm-warning-line me-1 align-bottom"></i> Pedidos Pendientes
-                                    <span class="badge bg-danger ms-1">{{ $pedidosPendientes->count() }}</span>
+                                    <span class="badge bg-danger ms-1">{{ $pedidosPendientes->total() }}</span>
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" data-bs-toggle="tab" href="#pedidos-pagados" role="tab">
                                     <i class="ri-check-double-line me-1 align-bottom"></i> Pedidos Pagados
-                                    <span class="badge bg-success ms-1">{{ $pedidosPagados->count() }}</span>
+                                    <span class="badge bg-success ms-1">{{ $pedidosPagados->total() }}</span>
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" data-bs-toggle="tab" href="#historial-recibos" role="tab">
                                     <i class="ri-receipt-line me-1 align-bottom"></i> Historial de Recibos
-                                    <span class="badge bg-info ms-1">{{ $pagos->count() }}</span>
+                                    <span class="badge bg-info ms-1">{{ $pagos->total() }}</span>
                                 </a>
                             </li>
                         </ul>
                     </div>
                     <div class="card-body">
                         <div class="tab-content">
-                            <!-- Tab Pedidos Pendientes -->
                             <div class="tab-pane fade show active" id="pedidos-pendientes" role="tabpanel">
-                                <!-- En la pestaña de pedidos pendientes, en el encabezado, agrega: -->
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-warning">
-                                        {{ $pedidosPendientes->count() }} pendientes
-                                    </span>
+                                <div class="d-flex align-items-center gap-2 mb-3">
+                                    <span class="badge bg-warning">{{ $pedidosPendientes->total() }} pendientes</span>
                                     <button type="button" class="btn btn-success btn-sm ms-2" id="btnPagoMultiple">
                                         <i class="ri-money-dollar-circle-line me-1"></i> Pago Múltiple
                                     </button>
                                 </div>
-                                @if ($pedidosPendientes->count() > 0)
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-centered align-middle table-nowrap mb-0">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Fecha</th>
-                                                    <th>Código Pedido</th>
-                                                    <th>Tipo de Pedido</th>
-                                                    <th class="text-end">Subtotal</th>
-                                                    <th class="text-end">Pagado</th>
-                                                    <th class="text-end">Descuento</th>
-                                                    <th class="text-end">Pendiente</th>
-                                                    <th class="text-end">Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($pedidosPendientes as $pedido)
-                                                    @php
-                                                        $pagadoBs = $pedido->pagado_bs ?? 0;
-                                                        $descuentoBs = $pedido->descuento_bs ?? 0;
-                                                        $pendiente = $pedido->subtotal - $pagadoBs - $descuentoBs;
-                                                        $pagosPedido = $pedido->pagos ?? collect();
-
-                                                        // Determinar el tipo de pedido basado en pedido_dia
-                                                        $tipoPedido = 'Regular';
-                                                        $badgeClass = 'bg-primary';
-
-                                                        if (
-                                                            $pedido->pedidos_productos &&
-                                                            $pedido->pedidos_productos->count() > 0
-                                                        ) {
-                                                            // Tomar el primer producto para determinar el tipo (asumiendo que todos son del mismo tipo)
-                                                            $primerProducto = $pedido->pedidos_productos->first();
-
-                                                            if ($primerProducto->pedido_dia == 1) {
-                                                                $tipoPedido = 'Frial';
-                                                                $badgeClass = 'bg-success';
-                                                            } elseif ($primerProducto->pedido_dia == 2) {
-                                                                $tipoPedido = 'Frial Sofia';
-                                                                $badgeClass = 'bg-info';
-                                                            }
-                                                            // Si pedido_dia es 0 o cualquier otro valor, se mantiene como Regular
-                                                        }
-                                                    @endphp
-                                                    <tr class="{{ $pendiente > 0 ? 'table-warning' : '' }}">
-                                                        <td>
-                                                            {{ $pedido->created_at->format('d/m/Y H:i') }}
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <span class="fw-medium">{{ $pedido->codigo ?? 'N/A' }}</span>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <span
-                                                                class="badge {{ $badgeClass }}">{{ $tipoPedido }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <span class="fw-medium">Bs.
-                                                                {{ number_format($pedido->subtotal, 2) }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <span class="text-primary">Bs.
-                                                                {{ number_format($pagadoBs, 2) }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <span class="text-warning">Bs.
-                                                                {{ number_format($descuentoBs, 2) }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <span class="fw-bold text-danger">Bs.
-                                                                {{ number_format($pendiente, 2) }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <div class="btn-group" role="group">
-                                                                <!-- 🔹 NUEVO BOTÓN VER PRODUCTOS -->
-                                                                <button type="button"
-                                                                    class="btn btn-warning btn-sm verProductosBtn"
-                                                                    data-pedido-id="{{ $pedido->id }}"
-                                                                    title="Ver productos del pedido">
-                                                                    <i class="ri-eye-line me-1"></i> Productos
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="btn btn-primary btn-sm pagarConDescuento"
-                                                                    data-pedido-id="{{ $pedido->id }}"
-                                                                    data-pedido-desc="Pedido #{{ $pedido->codigo ?? $pedido->id }}"
-                                                                    data-subtotal="{{ $pedido->subtotal }}"
-                                                                    data-pagado="{{ $pagadoBs }}"
-                                                                    data-descuento="{{ $descuentoBs }}"
-                                                                    data-pendiente="{{ $pendiente }}">
-                                                                    <i class="ri-money-dollar-circle-line me-1"></i> Pago
-                                                                </button>
-
-                                                                @if ($pagosPedido->count() > 0)
-                                                                    <div class="dropdown ms-1">
-                                                                        <button class="btn btn-info btn-sm dropdown-toggle"
-                                                                            type="button" data-bs-toggle="dropdown">
-                                                                            <i class="ri-receipt-line me-1"></i> Recibos
-                                                                            ({{ $pagosPedido->count() }})
-                                                                        </button>
-                                                                        <ul class="dropdown-menu">
-                                                                            @foreach ($pagosPedido as $pago)
-                                                                                <li>
-                                                                                    <a class="dropdown-item"
-                                                                                        href="{{ route('admin.recibos.ver', $pago->id) }}"
-                                                                                        target="_blank">
-                                                                                        Recibo {{ $pago->recibo }} - Bs.
-                                                                                        {{ number_format($pago->pago_bs, 2) }}
-                                                                                    </a>
-                                                                                </li>
-                                                                            @endforeach
-                                                                        </ul>
-                                                                    </div>
-                                                                @endif
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                @else
-                                    <div class="text-center py-5">
-                                        <div class="avatar-lg mx-auto mb-4">
-                                            <div class="avatar-title bg-success-subtle text-success rounded-circle">
-                                                <i class="ri-check-line fs-24"></i>
-                                            </div>
-                                        </div>
-                                        <h5 class="text-success">No hay pedidos pendientes</h5>
-                                        <p class="text-muted">Todos los pedidos están pagados.</p>
-                                    </div>
-                                @endif
+                                <div id="tabla-pendientes">
+                                    @include('admin.clientes.partials.pedidos-pendientes-table', [
+                                        'pedidosPendientes' => $pedidosPendientes,
+                                    ])
+                                </div>
                             </div>
 
-                            <!-- Tab Pedidos Pagados -->
                             <div class="tab-pane fade" id="pedidos-pagados" role="tabpanel">
-                                @if ($pedidosPagados->count() > 0)
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-centered align-middle table-nowrap mb-0">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Fecha</th>
-                                                    <th>Código Pedido</th>
-                                                    <th>Tipo de Pedido</th>
-                                                    <th class="text-end">Subtotal</th>
-                                                    <th class="text-end">Pagado</th>
-                                                    <th class="text-end">Descuento</th>
-                                                    <th class="text-end">Recibos</th>
-                                                    <th class="text-end">Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($pedidosPagados as $pedido)
-                                                    @php
-                                                        $pagadoBs = $pedido->pagado_bs ?? 0;
-                                                        $descuentoBs = $pedido->descuento_bs ?? 0;
-                                                        $pagosPedido = $pedido->pagos ?? collect();
-
-                                                        // Determinar el tipo de pedido basado en pedido_dia
-                                                        $tipoPedido = 'Regular';
-                                                        $badgeClass = 'bg-primary';
-
-                                                        if (
-                                                            $pedido->pedidos_productos &&
-                                                            $pedido->pedidos_productos->count() > 0
-                                                        ) {
-                                                            $primerProducto = $pedido->pedidos_productos->first();
-
-                                                            if ($primerProducto->pedido_dia == 1) {
-                                                                $tipoPedido = 'Frial';
-                                                                $badgeClass = 'bg-success';
-                                                            } elseif ($primerProducto->pedido_dia == 2) {
-                                                                $tipoPedido = 'Frial Sofia';
-                                                                $badgeClass = 'bg-info';
-                                                            }
-                                                        }
-                                                    @endphp
-                                                    <tr class="table-success">
-                                                        <td>
-                                                            {{ $pedido->created_at->format('d/m/Y H:i') }}
-                                                        </td>
-                                                        <td>
-                                                            <span class="fw-medium">{{ $pedido->codigo ?? 'N/A' }}</span>
-                                                        </td>
-                                                        <td>
-                                                            <span
-                                                                class="badge {{ $badgeClass }}">{{ $tipoPedido }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <span class="fw-medium">Bs.
-                                                                {{ number_format($pedido->subtotal, 2) }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <span class="text-success">Bs.
-                                                                {{ number_format($pagadoBs, 2) }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <span class="text-warning">Bs.
-                                                                {{ number_format($descuentoBs, 2) }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-
-                                                            @if ($pagosPedido->count() > 0)
-                                                                <div class="dropdown">
-                                                                    <button class="btn btn-sm btn-info dropdown-toggle"
-                                                                        type="button" data-bs-toggle="dropdown">
-                                                                        {{ $pagosPedido->count() }} recibo(s)
-                                                                    </button>
-                                                                    <ul class="dropdown-menu">
-                                                                        @foreach ($pagosPedido as $pago)
-                                                                            <li>
-                                                                                <a class="dropdown-item"
-                                                                                    href="{{ route('admin.recibos.ver', $pago->id) }}"
-                                                                                    target="_blank">
-                                                                                    {{ $pago->recibo }} - Bs.
-                                                                                    {{ number_format($pago->pago_bs, 2) }}
-                                                                                </a>
-                                                                            </li>
-                                                                        @endforeach
-                                                                    </ul>
-                                                                </div>
-                                                            @else
-                                                                <span class="text-muted">Sin recibo</span>
-                                                            @endif
-                                                        </td>
-                                                        <td class="text-end">
-                                                            @if ($pagosPedido->count() > 0)
-                                                                <div class="btn-group" role="group">
-                                                                    @foreach ($pagosPedido as $pago)
-                                                                        <a href="{{ route('admin.recibos.ver', $pago->id) }}"
-                                                                            class="btn btn-sm btn-info" target="_blank"
-                                                                            title="Ver Recibo {{ $pago->recibo }}">
-                                                                            <i class="ri-external-link-line"></i>
-                                                                        </a>
-                                                                    @endforeach
-                                                                </div>
-                                                                <!-- Botón Ver Productos -->
-                                                                <button type="button"
-                                                                    class="btn btn-sm btn-warning verProductosBtn me-1"
-                                                                    data-pedido-id="{{ $pedido->id }}"
-                                                                    title="Ver productos del pedido">
-                                                                    <i class="ri-eye-line"></i>
-                                                                </button>
-                                                            @endif
-
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                @else
-                                    <div class="text-center py-5">
-                                        <div class="avatar-lg mx-auto mb-4">
-                                            <div class="avatar-title bg-light text-muted rounded-circle">
-                                                <i class="ri-inbox-line fs-24"></i>
-                                            </div>
-                                        </div>
-                                        <h5 class="text-muted">No hay pedidos pagados</h5>
-                                        <p class="text-muted">No se encontraron pedidos pagados para este cliente.</p>
-                                    </div>
-                                @endif
+                                <div id="tabla-pagados">
+                                    @include('admin.clientes.partials.pedidos-pagados-table', [
+                                        'pedidosPagados' => $pedidosPagados,
+                                    ])
+                                </div>
                             </div>
 
-                            <!-- Tab Historial de Recibos -->
                             <div class="tab-pane fade" id="historial-recibos" role="tabpanel">
-                                @if ($pagos->count() > 0)
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-centered align-middle table-nowrap mb-0">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Recibo</th>
-                                                    <th>Fecha</th>
-                                                    <th>Pedido</th>
-                                                    <th class="text-end">Monto Pagado</th>
-                                                    <th class="text-end">Descuento</th>
-                                                    <th>Tipo de Pago</th>
-                                                    <th>Cobrador</th>
-                                                    <th class="text-center">Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($pagos as $pago)
-                                                    @php
-                                                        $tipoClass = match ($pago->tipo) {
-                                                            'efectivo' => 'success',
-                                                            'qr' => 'primary',
-                                                            'parcial' => 'warning',
-                                                            default => 'secondary',
-                                                        };
-                                                    @endphp
-                                                    <tr>
-                                                        <td>
-                                                            <div class="d-flex align-items-center">
-                                                                <div class="flex-shrink-0">
-                                                                    <div
-                                                                        class="avatar-sm rounded-circle bg-info bg-opacity-10">
-                                                                        <i class="ri-receipt-line fs-18 text-info"></i>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="flex-grow-1 ms-3">
-                                                                    <h6 class="mb-0">{{ $pago->recibo }}</h6>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            {{ $pago->created_at->format('d/m/Y H:i') }}
-                                                        </td>
-                                                        <td>
-                                                            {{ $pago->pedido->codigo ?? 'N/A' }}
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <span class="fw-bold text-success">Bs.
-                                                                {{ number_format($pago->pago_bs, 2) }}</span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            @if ($pago->descuento_bs > 0)
-                                                                <span class="fw-medium text-warning">Bs.
-                                                                    {{ number_format($pago->descuento_bs, 2) }}</span>
-                                                            @else
-                                                                <span class="text-muted">Bs. 0.00</span>
-                                                            @endif
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge bg-{{ $tipoClass }}">
-                                                                {{ strtoupper($pago->tipo) }}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <span class="fw-medium">{{ $pago->cobrador }}</span>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <div class="btn-group" role="group">
-                                                                <a href="{{ route('admin.recibos.ver', $pago->id) }}"
-                                                                    class="btn btn-sm btn-info" target="_blank"
-                                                                    title="Ver Recibo">
-                                                                    <i class="ri-eye-line"></i>
-                                                                </a>
-                                                                <a href="{{ route('admin.recibos.pdf', $pago->id) }}"
-                                                                    class="btn btn-sm btn-primary" title="Descargar PDF">
-                                                                    <i class="ri-download-line"></i>
-                                                                </a>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                @else
-                                    <div class="text-center py-5">
-                                        <div class="avatar-lg mx-auto mb-4">
-                                            <div class="avatar-title bg-light text-muted rounded-circle">
-                                                <i class="ri-inbox-line fs-24"></i>
-                                            </div>
-                                        </div>
-                                        <h5 class="text-muted">No hay recibos registrados</h5>
-                                        <p class="text-muted">No se encontraron recibos para este cliente.</p>
-                                    </div>
-                                @endif
+                                <div id="tabla-recibos">
+                                    @include('admin.clientes.partials.recibos-table', [
+                                        'pagos' => $pagos,
+                                    ])
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -518,7 +147,6 @@
             </div>
         </div>
     </div>
-
     <!-- Modal para pago con descuento y tipo de pago -->
     <!-- Modal para pago con descuento y tipo de pago - VERSIÓN MEJORADA -->
     <div class="modal fade" id="modalPagoConDescuento" tabindex="-1" aria-hidden="true">
@@ -881,7 +509,7 @@
                                             </tr>
                                         </thead>
                                         <tbody id="listaPedidosPendientes">
-                                            @foreach ($pedidosPendientes->sortBy('created_at') as $index => $pedido)
+                                            @foreach ($pedidosPendientesTodos->sortBy('created_at') as $index => $pedido)
                                                 @php
                                                     $pagadoBs = $pedido->pagado_bs ?? 0;
                                                     $descuentoBs = $pedido->descuento_bs ?? 0;
@@ -944,7 +572,7 @@
                                                     <p class="mb-0 fw-bold text-danger" id="totalPendienteTodos">
                                                         Bs.
                                                         {{ number_format(
-                                                            $pedidosPendientes->sum(function ($p) {
+                                                            $pedidosPendientesTodos->sum(function ($p) {
                                                                 $pagadoBs = $p->pagado_bs ?? 0;
                                                                 $descuentoBs = $p->descuento_bs ?? 0;
                                                                 return $p->subtotal - $pagadoBs - $descuentoBs;
@@ -2162,5 +1790,78 @@
         .border-info {
             border-color: #0dcaf0 !important;
         }
+
+        .tab-pagination .pagination {
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            margin-bottom: 0;
+        }
+
+        .tab-pagination .page-link {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 575.98px) {
+            .tab-pagination .pagination {
+                justify-content: center;
+            }
+        }
     </style>
+@endpush
+
+@push('script')
+    <script>
+        $(document).ready(function() {
+            const tabUrls = {
+                pendientes: "{{ route('admin.clientes.tab', [$cliente->id, 'pendientes']) }}",
+                pagados: "{{ route('admin.clientes.tab', [$cliente->id, 'pagados']) }}",
+                recibos: "{{ route('admin.clientes.tab', [$cliente->id, 'recibos']) }}"
+            };
+
+            const containers = {
+                pendientes: '#tabla-pendientes',
+                pagados: '#tabla-pagados',
+                recibos: '#tabla-recibos'
+            };
+
+            $(document).on('click', '.tab-pagination .pagination a', function(e) {
+                e.preventDefault();
+
+                const $link = $(this);
+                const tab = $link.closest('.tab-pagination').data('tab');
+
+                if (!tab || !tabUrls[tab]) {
+                    return;
+                }
+
+                const linkUrl = new URL($link.attr('href'), window.location.origin);
+                const page = linkUrl.searchParams.get('pendientes_page') ||
+                    linkUrl.searchParams.get('pagados_page') ||
+                    linkUrl.searchParams.get('pagos_page') ||
+                    linkUrl.searchParams.get('page') ||
+                    1;
+
+                const $container = $(containers[tab]);
+                $container.css('opacity', 0.55);
+
+                $.ajax({
+                    url: tabUrls[tab],
+                    type: 'GET',
+                    data: { page: page },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.html) {
+                            $container.html(response.html);
+                        }
+                    },
+                    error: function() {
+                        alert('No se pudo cargar la página del tab. Intenta nuevamente.');
+                    },
+                    complete: function() {
+                        $container.css('opacity', 1);
+                    }
+                });
+            });
+        });
+    </script>
 @endpush
