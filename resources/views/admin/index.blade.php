@@ -50,7 +50,7 @@
 
         <div class="row g-3">
             <!-- Sidebar con Localidades -->
-            <div class="col-xl-4 col-lg-5">
+            <div class="col-xl-4 col-12">
                 <div class="card h-100">
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h5 class="card-title mb-0">
@@ -62,13 +62,23 @@
                         <div class="card-body">
                             <div class="d-flex flex-column gap-2">
                                 @foreach ($localidades as $localidad)
-                                    <div class="localidad-item p-3 border rounded"
+                                    @php
+                                        $pedidoManana = $localidad->pedido_manana ?? false;
+                                    @endphp
+                                    <div class="localidad-item p-3 border rounded {{ $pedidoManana ? 'localidad-bloqueada' : '' }}"
                                         style="border-left: 4px solid {{ $localidad->color }} !important;"
                                         data-localidad-id="{{ $localidad->id }}"
                                         data-localidad-nombre="{{ $localidad->nombre }}">
                                         <div class="d-flex align-items-center">
                                             <div class="flex-grow-1">
-                                                <h6 class="mb-1">{{ $localidad->nombre }}</h6>
+                                                <h6 class="mb-1 d-flex align-items-center gap-2 flex-wrap">
+                                                    {{ $localidad->nombre }}
+                                                    @if ($pedidoManana)
+                                                        <span class="badge bg-success-subtle text-success">
+                                                            Día siguiente listo
+                                                        </span>
+                                                    @endif
+                                                </h6>
                                                 <p class="text-muted mb-0 small">
                                                     <i class="ri-user-line me-1"></i>
                                                     {{ $localidad->clientes_count ?? 0 }} clientes
@@ -84,8 +94,14 @@
                                         <div class="mt-2">
                                             <button class="btn btn-sm btn-outline-primary w-100 btn-crear-pedido"
                                                 data-localidad-id="{{ $localidad->id }}"
-                                                data-localidad-nombre="{{ $localidad->nombre }}">
-                                                <i class="ri-add-line me-1"></i> Crear Pedidos Día Siguiente
+                                                data-localidad-nombre="{{ $localidad->nombre }}"
+                                                {{ $pedidoManana ? 'disabled' : '' }}
+                                                title="{{ $pedidoManana ? 'Ya se generaron pedidos para el día siguiente' : 'Crear pedidos para el día siguiente' }}">
+                                                @if ($pedidoManana)
+                                                    <i class="ri-check-double-line me-1"></i> Pedidos Generados
+                                                @else
+                                                    <i class="ri-add-line me-1"></i> Crear Pedidos Día Siguiente
+                                                @endif
                                             </button>
                                         </div>
                                     </div>
@@ -107,13 +123,18 @@
             </div>
 
             <!-- Calendario -->
-            <div class="col-xl-8 col-lg-7">
+            <div class="col-xl-8 col-12">
                 <div class="card h-100">
                     <div class="card-header">
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <h5 class="card-title mb-0">
-                                <i class="ri-calendar-2-line me-2"></i>Calendario
-                            </h5>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-calendar-2-line me-2"></i>Calendario
+                                </h5>
+                                <span class="calendar-title" id="calendar-titulo">
+                                    {{ ucfirst(now()->locale('es')->translatedFormat('F Y')) }}
+                                </span>
+                            </div>
                             <div class="d-flex gap-2 flex-wrap">
                                 <button type="button" class="btn btn-primary btn-sm" id="btn-hoy">
                                     Hoy
@@ -245,6 +266,15 @@
                 locale: 'es',
                 timeZone: 'America/La_Paz', // ← ESTA ES LA CLAVE
                 firstDay: 1,
+                height: 'auto',
+                contentHeight: 'auto',
+                datesSet: function(info) {
+                    const titulo = info.view.title;
+
+                    $('#calendar-titulo').text(
+                        titulo.charAt(0).toUpperCase() + titulo.slice(1)
+                    );
+                },
                 headerToolbar: {
                     left: '',
                     center: '',
@@ -366,22 +396,35 @@
             }
 
             calendar.render();
+            window.avipCalendar = calendar;
+
+            function actualizarTituloCalendario() {
+                const titulo = calendar.view.title;
+
+                $('#calendar-titulo').text(
+                    titulo.charAt(0).toUpperCase() + titulo.slice(1)
+                );
+            }
 
             // Controles personalizados
             document.getElementById('btn-prev').addEventListener('click', function() {
                 calendar.prev();
+                setTimeout(actualizarTituloCalendario, 100);
             });
 
             document.getElementById('btn-next').addEventListener('click', function() {
                 calendar.next();
+                setTimeout(actualizarTituloCalendario, 100);
             });
 
             document.getElementById('btn-hoy').addEventListener('click', function() {
                 calendar.today();
+                setTimeout(actualizarTituloCalendario, 100);
             });
 
             document.getElementById('selector-vista').addEventListener('change', function() {
                 calendar.changeView(this.value);
+                setTimeout(actualizarTituloCalendario, 100);
             });
 
             // ========== FUNCIONALIDAD CREAR PEDIDOS ==========
@@ -398,6 +441,10 @@
             });
 
             $(document).on('click', '.localidad-item', function() {
+                if ($(this).hasClass('localidad-bloqueada')) {
+                    return;
+                }
+
                 const boton = $(this).find('.btn-crear-pedido');
                 if (boton.is(':disabled')) {
                     return;
@@ -639,7 +686,7 @@
                     .addClass('btn-outline-secondary')
                     .html('<i class="ri-check-double-line me-1"></i> Pedidos Generados');
 
-                itemLocalidad.addClass('bg-light');
+                itemLocalidad.addClass('localidad-bloqueada').removeClass('bg-light');
             }
 
             // Función para verificar y actualizar el estado de todos los botones al cargar la página
@@ -676,7 +723,8 @@
                                         );
 
                                     $(`.localidad-item[data-localidad-id="${localidadId}"]`)
-                                        .addClass('bg-light');
+                                        .addClass('localidad-bloqueada')
+                                        .removeClass('bg-light');
                                 } else {
                                     // Asegurarse de que el botón esté habilitado si no hay pedidos
                                     boton.prop('disabled', false)
@@ -687,6 +735,7 @@
                                         );
 
                                     $(`.localidad-item[data-localidad-id="${localidadId}"]`)
+                                        .removeClass('localidad-bloqueada')
                                         .removeClass('bg-light');
                                 }
                             },
@@ -699,10 +748,8 @@
                 });
             }
 
-            // Ejecutar al cargar la página
-            setTimeout(() => {
-                actualizarEstadosBotones();
-            }, 1000);
+            // El estado inicial de cada localidad se calcula en el servidor.
+            // La revalidación AJAX se omite para evitar parpadeos y errores de sesión.
 
             function showNotification(type, message) {
                 let toastContainer = $('#toast-container');

@@ -1528,6 +1528,31 @@ h5.card-title,
     color: #98a79c;
 }
 
+.localidad-item.localidad-bloqueada {
+    opacity: 0.72;
+    background: #f4f7f2;
+    border-color: #e2e9df !important;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.localidad-item.localidad-bloqueada .btn-crear-pedido {
+    pointer-events: none;
+}
+
+.calendar-title {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    background: var(--avip-leaf-soft);
+    color: var(--avip-forest);
+    font-family: var(--avip-font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 #calendar {
     background-color: transparent;
     font-family: var(--avip-font-ui);

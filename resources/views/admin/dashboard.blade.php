@@ -36,7 +36,7 @@
     <!-- custom Css-->
     <link href="{{ asset('backend/assets/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- AVIP theme -->
-    <link href="{{ asset('backend/assets/css/avip-theme.css') }}?v=1.2" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('backend/assets/css/avip-theme.css') }}?v=1.3" rel="stylesheet" type="text/css" />
 
 </head>
 

@@ -25,6 +25,18 @@ class AdminController extends Controller
         // Obtener todas las localidades para mostrar en el sidebar
         $localidades = Localidade::withCount('clientes')->orderBy('nombre')->get();
 
+        // Marcar localidades que ya tienen pedidos regulares para el día siguiente
+        $fechaManana = now()->addDay()->toDateString();
+        $idsConPedidoManana = Pedido::where('pedido_dia', 0)
+            ->whereDate('created_at', $fechaManana)
+            ->pluck('localidade_id')
+            ->unique()
+            ->all();
+
+        foreach ($localidades as $localidad) {
+            $localidad->pedido_manana = in_array($localidad->id, $idsConPedidoManana, true);
+        }
+
         // Estadísticas
         $totalClientes = Cliente::count();
         $deudaTotal = Cliente::sum('deuda');
