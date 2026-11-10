@@ -38,6 +38,8 @@
     <!-- AVIP theme -->
     <link href="{{ asset('backend/assets/css/avip-theme.css') }}?v=1.4" rel="stylesheet" type="text/css" />
 
+    @stack('styles')
+
 </head>
 
 <body class="avip-app">
@@ -182,6 +184,7 @@
 
 
     @stack('script')
+    @stack('scripts')
 </body>
 
 

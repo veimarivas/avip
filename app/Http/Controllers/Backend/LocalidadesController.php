@@ -282,12 +282,19 @@ class LocalidadesController extends Controller
         \Log::info('=== INICIO ACTUALIZAR PRECIOS MASIVO ===');
         \Log::info('Datos recibidos para actualización masiva:', $request->all());
 
+        $esAjax = $request->expectsJson() || $request->ajax();
+
         try {
             // Validación
             if (!$request->has('precios') || !is_array($request->precios)) {
                 \Log::error('Datos de precios no recibidos o formato incorrecto');
-                return redirect()->back()
-                    ->with('error', 'Formato de datos incorrecto. Los precios deben ser un array.');
+                $mensaje = 'Formato de datos incorrecto. Los precios deben ser un array.';
+
+                if ($esAjax) {
+                    return response()->json(['success' => false, 'msg' => $mensaje], 422);
+                }
+
+                return redirect()->back()->with('error', $mensaje);
             }
 
             $validator = Validator::make($request->all(), [
@@ -299,6 +306,15 @@ class LocalidadesController extends Controller
 
             if ($validator->fails()) {
                 \Log::error('Error de validación:', $validator->errors()->toArray());
+
+                if ($esAjax) {
+                    return response()->json([
+                        'success' => false,
+                        'msg' => 'Error de validación en los datos enviados.',
+                        'errors' => $validator->errors(),
+                    ], 422);
+                }
+
                 return redirect()->back()
                     ->withErrors($validator)
                     ->with('error', 'Error de validación en los datos enviados.');
@@ -319,8 +335,13 @@ class LocalidadesController extends Controller
             if (!$ultimoPedido) {
                 DB::rollBack();
                 \Log::warning('No hay pedidos registrados para esta localidad');
-                return redirect()->back()
-                    ->with('error', 'No hay pedidos registrados para esta localidad.');
+                $mensaje = 'No hay pedidos registrados para esta localidad.';
+
+                if ($esAjax) {
+                    return response()->json(['success' => false, 'msg' => $mensaje], 422);
+                }
+
+                return redirect()->back()->with('error', $mensaje);
             }
 
             $fechaUltimoPedido = $ultimoPedido->created_at->format('Y-m-d');
@@ -338,8 +359,13 @@ class LocalidadesController extends Controller
             if ($pedidosCompletamenteProcesados) {
                 DB::rollBack();
                 \Log::warning('No se pueden actualizar precios porque hay pedidos completamente realizados y procesados');
-                return redirect()->back()
-                    ->with('error', 'No se pueden actualizar los precios porque hay pedidos completamente realizados y procesados. Solo se pueden actualizar precios si ningún pedido ha sido completamente realizado y procesado.');
+                $mensaje = 'No se pueden actualizar los precios porque hay pedidos completamente realizados y procesados. Solo se pueden actualizar precios si ningún pedido ha sido completamente realizado y procesado.';
+
+                if ($esAjax) {
+                    return response()->json(['success' => false, 'msg' => $mensaje], 409);
+                }
+
+                return redirect()->back()->with('error', $mensaje);
             }
 
             // 3. Actualizar precios en localidades_productos
@@ -378,15 +404,30 @@ class LocalidadesController extends Controller
 
             \Log::info('=== ACTUALIZACIÓN MASIVA COMPLETADA EXITOSAMENTE ===');
 
+            $mensaje = 'Precios actualizados correctamente en la localidad y en los pedidos del día ' . $fechaUltimoPedido;
+
+            if ($esAjax) {
+                return response()->json([
+                    'success' => true,
+                    'msg' => $mensaje,
+                    'fecha' => $fechaUltimoPedido,
+                ]);
+            }
+
             return redirect()->route('admin.localidades.ver', $localidadId)
-                ->with('success', 'Precios actualizados correctamente en la localidad y en los pedidos del día ' . $fechaUltimoPedido);
+                ->with('success', $mensaje);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error al actualizar precios masivamente: ' . $e->getMessage());
             \Log::error('Trace: ' . $e->getTraceAsString());
 
-            return redirect()->back()
-                ->with('error', 'Error al actualizar los precios: ' . $e->getMessage());
+            $mensaje = 'Error al actualizar los precios: ' . $e->getMessage();
+
+            if ($esAjax) {
+                return response()->json(['success' => false, 'msg' => $mensaje], 500);
+            }
+
+            return redirect()->back()->with('error', $mensaje);
         }
     }
 }
