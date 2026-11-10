@@ -21,6 +21,12 @@ class CobrosDiariosExport implements FromCollection, WithHeadings, WithCustomSta
     protected string $usuarioFiltro;
     protected string $tipoFiltro;
 
+    protected array $filas = [];
+    protected array $filasGrupo = [];
+    protected array $filasSubtotal = [];
+    protected int $ultimaFila = 5;
+    protected bool $filasConstruidas = false;
+
     public function __construct(
         array $cobrosPorUsuario,
         array $totalesGenerales,
@@ -40,13 +46,63 @@ class CobrosDiariosExport implements FromCollection, WithHeadings, WithCustomSta
         return 'A4';
     }
 
-    public function collection()
+    /**
+     * Construye las filas del reporte:
+     * - Encabezado de cada usuario.
+     * - Detalle de cada cobro con su cliente.
+     * - Subtotal por usuario.
+     * - Total general al final.
+     */
+    private function construirFilas(): void
     {
-        $rows = [];
+        if ($this->filasConstruidas) {
+            return;
+        }
+
+        $this->filasConstruidas = true;
+        $fila = 5;
 
         foreach ($this->cobrosPorUsuario as $cobro) {
-            $rows[] = [
-                $cobro['nombre_completo'] ?? 'Sin usuario',
+            $nombreUsuario = trim((string) ($cobro['nombre_completo'] ?? '')) ?: 'Sin usuario';
+
+            $this->filas[] = [
+                'USUARIO: ' . $nombreUsuario,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+            ];
+            $this->filasGrupo[] = $fila++;
+
+            foreach (($cobro['detalles'] ?? []) as $detalle) {
+                $etiqueta = '   Cliente: ' . (trim((string) ($detalle['cliente'] ?? '')) ?: 'Sin cliente');
+
+                if (!empty($detalle['recibo'])) {
+                    $etiqueta .= ' · Recibo ' . $detalle['recibo'];
+                }
+
+                if (!empty($detalle['hora'])) {
+                    $etiqueta .= ' · ' . $detalle['hora'];
+                }
+
+                $this->filas[] = [
+                    $etiqueta,
+                    round((float) ($detalle['efectivo'] ?? 0), 2),
+                    round((float) ($detalle['qr'] ?? 0), 2),
+                    round((float) ($detalle['parcial_efectivo'] ?? 0), 2),
+                    round((float) ($detalle['parcial_qr'] ?? 0), 2),
+                    round((float) ($detalle['descuento'] ?? 0), 2),
+                    round((float) ($detalle['total'] ?? 0), 2),
+                    1,
+                ];
+                $fila++;
+            }
+
+            $this->filas[] = [
+                'Subtotal ' . $nombreUsuario,
                 round((float) ($cobro['efectivo'] ?? 0), 2),
                 round((float) ($cobro['qr'] ?? 0), 2),
                 round((float) ($cobro['parcial_efectivo'] ?? 0), 2),
@@ -55,9 +111,10 @@ class CobrosDiariosExport implements FromCollection, WithHeadings, WithCustomSta
                 round((float) ($cobro['total'] ?? 0), 2),
                 (int) ($cobro['cantidad_recibos'] ?? 0),
             ];
+            $this->filasSubtotal[] = $fila++;
         }
 
-        $rows[] = [
+        $this->filas[] = [
             'TOTALES',
             round((float) ($this->totalesGenerales['efectivo'] ?? 0), 2),
             round((float) ($this->totalesGenerales['qr'] ?? 0), 2),
@@ -67,14 +124,20 @@ class CobrosDiariosExport implements FromCollection, WithHeadings, WithCustomSta
             round((float) ($this->totalesGenerales['total'] ?? 0), 2),
             array_sum(array_column($this->cobrosPorUsuario, 'cantidad_recibos')),
         ];
+        $this->ultimaFila = $fila;
+    }
 
-        return collect($rows);
+    public function collection()
+    {
+        $this->construirFilas();
+
+        return collect($this->filas);
     }
 
     public function headings(): array
     {
         return [
-            'Usuario',
+            'Usuario / Cliente',
             'Efectivo (Bs.)',
             'QR (Bs.)',
             'Efectivo parcial (Bs.)',
@@ -87,9 +150,9 @@ class CobrosDiariosExport implements FromCollection, WithHeadings, WithCustomSta
 
     public function styles(Worksheet $sheet)
     {
-        $lastRow = 5 + count($this->cobrosPorUsuario);
+        $this->construirFilas();
 
-        return [
+        $styles = [
             4 => [
                 'font' => [
                     'bold' => true,
@@ -104,23 +167,52 @@ class CobrosDiariosExport implements FromCollection, WithHeadings, WithCustomSta
                     'vertical' => Alignment::VERTICAL_CENTER,
                 ],
             ],
-            $lastRow => [
+        ];
+
+        foreach ($this->filasGrupo as $fila) {
+            $styles[$fila] = [
+                'font' => [
+                    'bold' => true,
+                    'color' => ['argb' => 'FF14503C'],
+                ],
+                'fill' => [
+                    'fillType' => 'solid',
+                    'startColor' => ['argb' => 'FFEAF3EC'],
+                ],
+            ];
+        }
+
+        foreach ($this->filasSubtotal as $fila) {
+            $styles[$fila] = [
                 'font' => [
                     'bold' => true,
                     'color' => ['argb' => 'FF0F241C'],
                 ],
                 'fill' => [
                     'fillType' => 'solid',
-                    'startColor' => ['argb' => 'FFFBF0D5'],
+                    'startColor' => ['argb' => 'FFF7FAF6'],
                 ],
+            ];
+        }
+
+        $styles[$this->ultimaFila] = [
+            'font' => [
+                'bold' => true,
+                'color' => ['argb' => 'FF0F241C'],
+            ],
+            'fill' => [
+                'fillType' => 'solid',
+                'startColor' => ['argb' => 'FFFBF0D5'],
             ],
         ];
+
+        return $styles;
     }
 
     public function columnWidths(): array
     {
         return [
-            'A' => 30,
+            'A' => 52,
             'B' => 18,
             'C' => 18,
             'D' => 22,
@@ -135,8 +227,10 @@ class CobrosDiariosExport implements FromCollection, WithHeadings, WithCustomSta
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
+                $this->construirFilas();
+
                 $sheet = $event->sheet->getDelegate();
-                $lastRow = 5 + count($this->cobrosPorUsuario);
+                $lastRow = $this->ultimaFila;
                 $fechaMostrar = $this->fecha;
 
                 if ($this->fecha && strtotime($this->fecha)) {

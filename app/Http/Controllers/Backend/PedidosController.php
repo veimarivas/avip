@@ -1626,32 +1626,57 @@ class PedidosController extends Controller
 
             $cobrosPorUsuario[$usuarioPagoId]['cantidad_recibos']++;
 
+            $efectivo = 0;
+            $qr = 0;
+            $parcialEfectivo = 0;
+            $parcialQr = 0;
+
             if ($pago->tipo === 'efectivo') {
-                $cobrosPorUsuario[$usuarioPagoId]['efectivo'] += $pago->pago_bs;
-                $totalesGenerales['efectivo'] += $pago->pago_bs;
+                $efectivo = (float) $pago->pago_bs;
+                $cobrosPorUsuario[$usuarioPagoId]['efectivo'] += $efectivo;
+                $totalesGenerales['efectivo'] += $efectivo;
             } elseif ($pago->tipo === 'qr') {
-                $cobrosPorUsuario[$usuarioPagoId]['qr'] += $pago->pago_bs;
-                $totalesGenerales['qr'] += $pago->pago_bs;
+                $qr = (float) $pago->pago_bs;
+                $cobrosPorUsuario[$usuarioPagoId]['qr'] += $qr;
+                $totalesGenerales['qr'] += $qr;
             } elseif ($pago->tipo === 'parcial') {
                 foreach ($pago->detalles as $detalle) {
                     if ($detalle->tipo === 'efectivo') {
-                        $cobrosPorUsuario[$usuarioPagoId]['parcial_efectivo'] += $detalle->pago_bs;
-                        $totalesGenerales['parcial_efectivo'] += $detalle->pago_bs;
+                        $parcialEfectivo += (float) $detalle->pago_bs;
                     } elseif ($detalle->tipo === 'qr') {
-                        $cobrosPorUsuario[$usuarioPagoId]['parcial_qr'] += $detalle->pago_bs;
-                        $totalesGenerales['parcial_qr'] += $detalle->pago_bs;
+                        $parcialQr += (float) $detalle->pago_bs;
                     }
                 }
+
+                $cobrosPorUsuario[$usuarioPagoId]['parcial_efectivo'] += $parcialEfectivo;
+                $cobrosPorUsuario[$usuarioPagoId]['parcial_qr'] += $parcialQr;
+                $totalesGenerales['parcial_efectivo'] += $parcialEfectivo;
+                $totalesGenerales['parcial_qr'] += $parcialQr;
             }
 
-            $cobrosPorUsuario[$usuarioPagoId]['descuento'] += $pago->descuento_bs;
-            $totalesGenerales['descuento'] += $pago->descuento_bs;
+            $descuento = (float) $pago->descuento_bs;
+            $cobrosPorUsuario[$usuarioPagoId]['descuento'] += $descuento;
+            $totalesGenerales['descuento'] += $descuento;
 
             $cobrosPorUsuario[$usuarioPagoId]['total'] =
                 $cobrosPorUsuario[$usuarioPagoId]['efectivo'] +
                 $cobrosPorUsuario[$usuarioPagoId]['qr'] +
                 $cobrosPorUsuario[$usuarioPagoId]['parcial_efectivo'] +
                 $cobrosPorUsuario[$usuarioPagoId]['parcial_qr'];
+
+            $cobrosPorUsuario[$usuarioPagoId]['detalles'][] = [
+                'recibo' => $pago->recibo,
+                'cliente' => trim(($pago->cliente->nombres ?? '') . ' ' . ($pago->cliente->apellidos ?? '')),
+                'ci' => $pago->cliente->ci ?? null,
+                'hora' => $pago->created_at ? $pago->created_at->format('H:i') : null,
+                'tipo' => $pago->tipo,
+                'efectivo' => $efectivo,
+                'qr' => $qr,
+                'parcial_efectivo' => $parcialEfectivo,
+                'parcial_qr' => $parcialQr,
+                'descuento' => $descuento,
+                'total' => $efectivo + $qr + $parcialEfectivo + $parcialQr,
+            ];
         }
 
         $totalesGenerales['total'] =
