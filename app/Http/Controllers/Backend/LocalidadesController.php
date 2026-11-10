@@ -345,28 +345,18 @@ class LocalidadesController extends Controller
             }
 
             $fechaUltimoPedido = $ultimoPedido->created_at->format('Y-m-d');
+            $inicioFecha = $fechaUltimoPedido . ' 00:00:00';
+            $finFecha = $fechaUltimoPedido . ' 23:59:59';
             \Log::info("Fecha del último pedido: $fechaUltimoPedido");
 
-            // 2. Verificar si existe algún pedido_producto con realizado = 1 Y procesado = 1 para la fecha del último pedido
-            $pedidosCompletamenteProcesados = PedidoProductos::where('localidade_id', $localidadId)
-                ->whereDate('created_at', $fechaUltimoPedido)
+            // 2. Contar pedidos completamente procesados: conservarán sus precios originales
+            $productosProcesados = PedidoProductos::where('localidade_id', $localidadId)
+                ->whereBetween('created_at', [$inicioFecha, $finFecha])
                 ->where('realizado', '1')
                 ->where('procesado', '1')
-                ->exists();
+                ->count();
 
-            \Log::info("¿Hay pedidos completamente realizados y procesados?: " . ($pedidosCompletamenteProcesados ? 'SÍ' : 'NO'));
-
-            if ($pedidosCompletamenteProcesados) {
-                DB::rollBack();
-                \Log::warning('No se pueden actualizar precios porque hay pedidos completamente realizados y procesados');
-                $mensaje = 'No se pueden actualizar los precios porque hay pedidos completamente realizados y procesados. Solo se pueden actualizar precios si ningún pedido ha sido completamente realizado y procesado.';
-
-                if ($esAjax) {
-                    return response()->json(['success' => false, 'msg' => $mensaje], 409);
-                }
-
-                return redirect()->back()->with('error', $mensaje);
-            }
+            \Log::info("Líneas de pedidos ya procesados que conservarán su precio: $productosProcesados");
 
             // 3. Actualizar precios en localidades_productos
             foreach ($precios as $item) {
@@ -390,9 +380,13 @@ class LocalidadesController extends Controller
 
                 $actualizados = PedidoProductos::where('localidade_id', $localidadId)
                     ->where('producto_id', $productoId)
-                    ->whereDate('created_at', $fechaUltimoPedido)
+                    ->whereBetween('created_at', [$inicioFecha, $finFecha])
                     ->where(function ($query) {
-                        $query->where('realizado', '!=', '1')
+                        $query->whereNull('realizado')
+                            ->orWhere('realizado', '!=', '1');
+                    })
+                    ->where(function ($query) {
+                        $query->whereNull('procesado')
                             ->orWhere('procesado', '!=', '1');
                     })
                     ->update(['precio' => $nuevoPrecio]);
@@ -404,13 +398,18 @@ class LocalidadesController extends Controller
 
             \Log::info('=== ACTUALIZACIÓN MASIVA COMPLETADA EXITOSAMENTE ===');
 
-            $mensaje = 'Precios actualizados correctamente en la localidad y en los pedidos del día ' . $fechaUltimoPedido;
+            $mensaje = 'Precios actualizados correctamente en la localidad y en los pedidos pendientes del día ' . $fechaUltimoPedido . '.';
+
+            if ($productosProcesados > 0) {
+                $mensaje .= ' ' . $productosProcesados . ' líneas de pedidos ya procesados conservaron su precio original.';
+            }
 
             if ($esAjax) {
                 return response()->json([
                     'success' => true,
                     'msg' => $mensaje,
                     'fecha' => $fechaUltimoPedido,
+                    'procesados' => $productosProcesados,
                 ]);
             }
 

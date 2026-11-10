@@ -255,15 +255,13 @@
                             <i class="ri-information-line me-2"></i>
                             <strong>Información importante:</strong><br>
                             - Los precios se actualizarán en la localidad<br>
-                            - Se actualizarán automáticamente en todos los pedidos <strong>de la fecha del último pedido
+                            - Se actualizarán automáticamente en los pedidos <strong>de la fecha del último pedido
                                 registrado</strong><br>
                             - Solo se actualizarán pedidos que <strong>NO estén completamente realizados y procesados
                                 (realizado = 1 Y procesado = 1)</strong><br>
-                            - <strong class="text-danger">No se podrán actualizar precios si hay al menos un pedido
-                                completamente realizado y procesado para la fecha del último pedido</strong><br>
                             - Los pedidos con <strong>realizado = 1 y procesado = 0</strong> o <strong>realizado = 0 y
                                 procesado = 0</strong> SÍ se actualizarán<br>
-                            - Los pedidos completamente realizados y procesados mantendrán sus precios originales
+                            - Los pedidos completamente realizados y procesados conservarán sus precios originales
                         </div>
 
                         <div class="mb-3 p-3 bg-light rounded">
@@ -330,8 +328,8 @@
                                         <td colspan="3" class="text-center">
                                             <small class="text-muted">
                                                 <i class="ri-alert-line me-1"></i>
-                                                Esta acción actualizará los precios en todos los pedidos del día de hoy que
-                                                no hayan sido realizados
+                                                Esta acción actualizará la localidad y los pedidos pendientes del día del
+                                                último pedido registrado
                                             </small>
                                         </td>
                                     </tr>
@@ -351,6 +349,10 @@
             </div>
         </div>
     </div>
+
+    <!-- Contenedor de notificaciones -->
+    <div id="avipToastContainer" class="toast-container position-fixed top-0 end-0 p-3"
+        style="z-index: 1100;" aria-live="polite" aria-atomic="true"></div>
 @endsection
 
 @push('styles')
@@ -461,6 +463,86 @@
             color: #d97706;
             border-left: 4px solid #d97706;
         }
+
+        /* Notificaciones tipo toast */
+        .toast-container .avip-toast {
+            min-width: 340px;
+            max-width: 420px;
+            border: 0;
+            border-left: 5px solid #2b8a5a;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 22px 45px -20px rgba(15, 36, 28, 0.55);
+            background: #ffffff;
+        }
+
+        .avip-toast .toast-header {
+            padding: 0.75rem 0.9rem;
+            background: #ffffff;
+            border-bottom: 1px solid #eef2ee;
+            color: var(--avip-ink, #16352a);
+        }
+
+        .avip-toast .toast-header strong {
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        .avip-toast .toast-body {
+            padding: 0.8rem 0.95rem;
+            color: var(--avip-body, #4d6155);
+            font-size: 0.85rem;
+            line-height: 1.45;
+        }
+
+        .avip-toast__icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            margin-right: 0.55rem;
+            border-radius: 9px;
+            background: #e7f5ec;
+            color: #2b8a5a;
+            font-size: 1rem;
+        }
+
+        .avip-toast--success {
+            border-left-color: #2b8a5a;
+        }
+
+        .avip-toast--success .avip-toast__icon {
+            background: #e7f5ec;
+            color: #2b8a5a;
+        }
+
+        .avip-toast--error {
+            border-left-color: #d64545;
+        }
+
+        .avip-toast--error .avip-toast__icon {
+            background: #fdecec;
+            color: #d64545;
+        }
+
+        .avip-toast--warning {
+            border-left-color: #d98b1c;
+        }
+
+        .avip-toast--warning .avip-toast__icon {
+            background: #fdf3e2;
+            color: #d98b1c;
+        }
+
+        .avip-toast--info {
+            border-left-color: #3b7fb5;
+        }
+
+        .avip-toast--info .avip-toast__icon {
+            background: #e9f2fa;
+            color: #3b7fb5;
+        }
     </style>
 @endpush
 
@@ -469,41 +551,87 @@
         $(document).ready(function() {
             let isProcessing = false;
 
-            // Función para mostrar notificaciones
-            function showNotification(type, message) {
-                // Cerrar notificaciones existentes primero
-                $('.alert-dismissible').alert('close');
+            const toastIcons = {
+                success: 'ri-checkbox-circle-fill',
+                error: 'ri-error-warning-fill',
+                warning: 'ri-alert-fill',
+                info: 'ri-information-fill'
+            };
 
-                // Crear elemento de notificación
-                const notification = document.createElement('div');
-                notification.className = `alert alert-${type} alert-dismissible fade show mb-3`;
-                notification.innerHTML = `
-        <i class="ri-${type === 'success' ? 'checkbox-circle-line' : 'error-warning-line'} me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+            const toastTitles = {
+                success: 'Precios actualizados',
+                error: 'No se pudo completar',
+                warning: 'Atención',
+                info: 'Información'
+            };
 
-                // Insertar después del page-title-box
-                const pageTitle = document.querySelector('.page-title-box');
-                if (pageTitle && pageTitle.parentNode) {
-                    $(pageTitle).after(notification);
-                } else {
-                    // Fallback: insertar al inicio del container
-                    const container = document.querySelector('.container-fluid');
-                    if (container) {
-                        $(container).prepend(notification);
-                    }
+            // Muestra una notificación tipo toast
+            function showToast(type, message, title) {
+                const container = document.getElementById('avipToastContainer');
+                if (!container) {
+                    return;
                 }
 
-                // Mostrar la notificación
-                $(notification).addClass('show');
+                const tipo = toastIcons[type] ? type : 'info';
+                const toastEl = document.createElement('div');
+                toastEl.className = 'toast avip-toast avip-toast--' + tipo;
+                toastEl.setAttribute('role', 'alert');
+                toastEl.setAttribute('aria-live', 'assertive');
+                toastEl.setAttribute('aria-atomic', 'true');
 
-                // Auto-eliminar después de 5 segundos
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        $(notification).alert('close');
-                    }
-                }, 5000);
+                const header = document.createElement('div');
+                header.className = 'toast-header';
+                header.innerHTML =
+                    '<span class="avip-toast__icon"><i class="' + toastIcons[tipo] + '"></i></span>' +
+                    '<strong class="me-auto">' + (title || toastTitles[tipo]) + '</strong>' +
+                    '<small class="text-muted">Ahora</small>' +
+                    '<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Cerrar"></button>';
+
+                const body = document.createElement('div');
+                body.className = 'toast-body';
+                body.textContent = message || '';
+
+                toastEl.appendChild(header);
+                toastEl.appendChild(body);
+                container.appendChild(toastEl);
+
+                // Mantener como máximo 3 toasts visibles
+                const toasts = container.querySelectorAll('.toast');
+                if (toasts.length > 3) {
+                    toasts[0].remove();
+                }
+
+                if (typeof bootstrap === 'undefined' || !bootstrap.Toast) {
+                    toastEl.classList.add('show');
+                    setTimeout(() => toastEl.remove(), 5000);
+                    return;
+                }
+
+                const toast = bootstrap.Toast.getOrCreateInstance(toastEl, {
+                    autohide: true,
+                    delay: 4500
+                });
+                toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+                toast.show();
+            }
+
+            // Compatibilidad con el código existente
+            function showNotification(type, message) {
+                showToast(type, message);
+            }
+
+            // Mostrar el toast pendiente después de recargar la página
+            try {
+                const pendingToast = sessionStorage.getItem('avipToast');
+                if (pendingToast) {
+                    sessionStorage.removeItem('avipToast');
+                    const data = JSON.parse(pendingToast);
+                    setTimeout(() => {
+                        showToast(data.type || 'success', data.message || '', data.title);
+                    }, 350);
+                }
+            } catch (e) {
+                console.warn('No se pudo mostrar la notificación pendiente', e);
             }
 
             $(document).on('submit', '#formActualizarPreciosMasivo', function(e) {
@@ -577,17 +705,25 @@
                         console.log('Respuesta recibida:', res);
 
                         if (res.success) {
-                            showNotification('success', res.msg);
+                            // Guardar el mensaje para mostrarlo como toast tras la recarga
+                            try {
+                                sessionStorage.setItem('avipToast', JSON.stringify({
+                                    type: 'success',
+                                    title: 'Precios actualizados',
+                                    message: res.msg
+                                }));
+                            } catch (e) {}
 
-                            // Cerrar el modal
-                            $('#modalActualizarPrecios').modal('hide');
+                            // Cerrar el modal con la API de Bootstrap 5
+                            const modalEl = document.getElementById('modalActualizarPrecios');
+                            if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                                bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                            }
 
-                            // Recargar la página después de un breve delay para mostrar la notificación
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1500);
+                            // Recargar la página para mostrar los datos actualizados
+                            setTimeout(() => window.location.reload(), 320);
                         } else {
-                            showNotification('error', res.msg || 'Error desconocido');
+                            showToast('error', res.msg || 'Error desconocido');
                         }
                     },
                     error: function(xhr, status, error) {
@@ -786,7 +922,10 @@
                     success: function(res) {
                         if (res.success) {
                             showNotification('success', res.msg);
-                            $('#agregarProductoModal').modal('hide');
+                            const agregarModal = document.getElementById('agregarProductoModal');
+                            if (agregarModal && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                                bootstrap.Modal.getOrCreateInstance(agregarModal).hide();
+                            }
                             agregarFilaProducto(res.producto);
                             actualizarContadorProductos();
                         } else {
