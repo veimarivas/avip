@@ -401,7 +401,10 @@ class LocalidadesController extends Controller
             $mensaje = 'Precios actualizados correctamente en la localidad y en los pedidos pendientes del día ' . $fechaUltimoPedido . '.';
 
             if ($productosProcesados > 0) {
-                $mensaje .= ' ' . $productosProcesados . ' líneas de pedidos ya procesados conservaron su precio original.';
+                $mensaje .= ' ' . $productosProcesados
+                    . ($productosProcesados === 1
+                        ? ' línea de pedido ya procesada conservó su precio original.'
+                        : ' líneas de pedidos ya procesados conservaron su precio original.');
             }
 
             if ($esAjax) {
