@@ -160,7 +160,26 @@ class LocalidadesController extends Controller
     {
         $localidad = Localidade::with(['productos'])->findOrFail($id);
         $todosProductos = Producto::all(); // Para poder agregar nuevos productos
-        return view('admin.localidades.ver', compact('localidad', 'todosProductos'));
+
+        $ultimoPedido = Pedido::where('localidade_id', $id)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->first();
+
+        $deudaGenerada = false;
+        if ($ultimoPedido) {
+            $deudaGenerada = Pedido::where('localidade_id', $id)
+                ->whereDate('created_at', $ultimoPedido->created_at->format('Y-m-d'))
+                ->where('subtotal', '>', 0)
+                ->exists();
+        }
+
+        return view('admin.localidades.ver', compact(
+            'localidad',
+            'todosProductos',
+            'ultimoPedido',
+            'deudaGenerada'
+        ));
     }
 
     public function actualizarPrecioProducto(Request $request)
@@ -327,9 +346,10 @@ class LocalidadesController extends Controller
             $localidadId = $request->localidad_id;
             $precios = $request->precios;
 
-            // 1. Obtener la fecha del último pedido registrado
+            // 1. Obtener el último pedido generado para la localidad
             $ultimoPedido = Pedido::where('localidade_id', $localidadId)
-                ->orderBy('created_at', 'desc')
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
                 ->first();
 
             if (!$ultimoPedido) {
@@ -345,18 +365,39 @@ class LocalidadesController extends Controller
             }
 
             $fechaUltimoPedido = $ultimoPedido->created_at->format('Y-m-d');
+            $fechaMostrar = $ultimoPedido->created_at->format('d/m/Y');
             $inicioFecha = $fechaUltimoPedido . ' 00:00:00';
             $finFecha = $fechaUltimoPedido . ' 23:59:59';
             \Log::info("Fecha del último pedido: $fechaUltimoPedido");
 
-            // 2. Contar pedidos completamente procesados: conservarán sus precios originales
-            $productosProcesados = PedidoProductos::where('localidade_id', $localidadId)
-                ->whereBetween('created_at', [$inicioFecha, $finFecha])
-                ->where('realizado', '1')
-                ->where('procesado', '1')
-                ->count();
+            // 2. Si el último pedido ya tiene deuda generada, no se pueden
+            // modificar los precios (aunque los pedidos ya estén registrados).
+            $deudaGenerada = Pedido::where('localidade_id', $localidadId)
+                ->whereDate('created_at', $fechaUltimoPedido)
+                ->where('subtotal', '>', 0)
+                ->exists();
 
-            \Log::info("Líneas de pedidos ya procesados que conservarán su precio: $productosProcesados");
+            if ($deudaGenerada) {
+                DB::rollBack();
+                $mensaje = 'El último pedido de la localidad (código '
+                    . $ultimoPedido->codigo . ', fecha ' . $fechaMostrar
+                    . ') ya tiene deuda generada. No se pueden modificar los precios.';
+                \Log::warning('Actualización de precios bloqueada: deuda generada', [
+                    'localidade_id' => $localidadId,
+                    'fecha' => $fechaUltimoPedido,
+                ]);
+
+                if ($esAjax) {
+                    return response()->json([
+                        'success' => false,
+                        'msg' => $mensaje,
+                        'fecha' => $fechaMostrar,
+                        'codigo' => $ultimoPedido->codigo,
+                    ], 409);
+                }
+
+                return redirect()->back()->with('error', $mensaje);
+            }
 
             // 3. Actualizar precios en localidades_productos
             foreach ($precios as $item) {
@@ -372,8 +413,8 @@ class LocalidadesController extends Controller
                 \Log::info("Registros actualizados en localidades_productos: $actualizados");
             }
 
-            // 4. Actualizar precios en pedido_productos para los pedidos de la fecha del último pedido
-            // que NO estén completamente procesados (realizado = 1 Y procesado = 1)
+            // 4. Actualizar precios en pedido_productos del último pedido generado.
+            // Si no hay deuda generada, se actualizan todos los pedidos de esa fecha.
             foreach ($precios as $item) {
                 $productoId = $item['producto_id'];
                 $nuevoPrecio = $item['precio'];
@@ -381,15 +422,6 @@ class LocalidadesController extends Controller
                 $actualizados = PedidoProductos::where('localidade_id', $localidadId)
                     ->where('producto_id', $productoId)
                     ->whereBetween('created_at', [$inicioFecha, $finFecha])
-                    ->where(function ($query) {
-                        // Actualizar todo lo que NO esté completamente procesado
-                        // (realizado = 1 Y procesado = 1).
-                        $query->where(function ($q) {
-                            $q->whereNull('realizado')->orWhere('realizado', '!=', '1');
-                        })->orWhere(function ($q) {
-                            $q->whereNull('procesado')->orWhere('procesado', '!=', '1');
-                        });
-                    })
                     ->update(['precio' => $nuevoPrecio]);
 
                 \Log::info("Actualizados $actualizados registros en pedido_productos para producto $productoId");
@@ -399,21 +431,15 @@ class LocalidadesController extends Controller
 
             \Log::info('=== ACTUALIZACIÓN MASIVA COMPLETADA EXITOSAMENTE ===');
 
-            $mensaje = 'Precios actualizados correctamente en la localidad y en los pedidos pendientes del día ' . $fechaUltimoPedido . '.';
-
-            if ($productosProcesados > 0) {
-                $mensaje .= ' ' . $productosProcesados
-                    . ($productosProcesados === 1
-                        ? ' línea de pedido ya procesada conservó su precio original.'
-                        : ' líneas de pedidos ya procesados conservaron su precio original.');
-            }
+            $mensaje = 'Precios actualizados correctamente en la localidad y en el último pedido del '
+                . $fechaMostrar . '.';
 
             if ($esAjax) {
                 return response()->json([
                     'success' => true,
                     'msg' => $mensaje,
-                    'fecha' => $fechaUltimoPedido,
-                    'procesados' => $productosProcesados,
+                    'fecha' => $fechaMostrar,
+                    'codigo' => $ultimoPedido->codigo,
                 ]);
             }
 

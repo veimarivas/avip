@@ -247,22 +247,35 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="formActualizarPreciosMasivo" method="POST"
-                    action="{{ route('admin.localidades.actualizar-precios-masivo') }}">
+                    action="{{ route('admin.localidades.actualizar-precios-masivo') }}"
+                    data-deuda="{{ $deudaGenerada ? '1' : '0' }}">
                     @csrf
                     <input type="hidden" name="localidad_id" value="{{ $localidad->id }}">
                     <div class="modal-body p-4">
                         <div class="alert alert-info">
                             <i class="ri-information-line me-2"></i>
                             <strong>Información importante:</strong><br>
-                            - Los precios se actualizarán en la localidad<br>
-                            - Se actualizarán automáticamente en los pedidos <strong>de la fecha del último pedido
-                                registrado</strong><br>
-                            - Solo se actualizarán pedidos que <strong>NO estén completamente realizados y procesados
-                                (realizado = 1 Y procesado = 1)</strong><br>
-                            - Los pedidos con <strong>realizado = 1 y procesado = 0</strong> o <strong>realizado = 0 y
-                                procesado = 0</strong> SÍ se actualizarán<br>
-                            - Los pedidos completamente realizados y procesados conservarán sus precios originales
+                            - Se actualizarán los precios de la localidad y del último pedido generado.<br>
+                            - Se permite actualizar aunque los pedidos ya estén registrados.<br>
+                            - No se podrán modificar si el último pedido ya tiene deuda generada.
                         </div>
+
+                        @if ($deudaGenerada)
+                            <div class="alert alert-danger">
+                                <i class="ri-lock-line me-2"></i>
+                                <strong>El último pedido de la localidad ya tiene deuda generada.</strong><br>
+                                Código: <strong>{{ $ultimoPedido->codigo }}</strong> ·
+                                Fecha: <strong>{{ $ultimoPedido->created_at->format('d/m/Y') }}</strong><br>
+                                No se pueden modificar los precios.
+                            </div>
+                        @elseif ($ultimoPedido)
+                            <div class="alert alert-success">
+                                <i class="ri-checkbox-circle-line me-2"></i>
+                                Último pedido: código <strong>{{ $ultimoPedido->codigo }}</strong> ·
+                                fecha <strong>{{ $ultimoPedido->created_at->format('d/m/Y') }}</strong>.
+                                Puedes actualizar los precios.
+                            </div>
+                        @endif
 
                         <div class="mb-3 p-3 bg-light rounded">
                             <div class="row">
@@ -313,7 +326,8 @@
                                                         class="form-control nuevo-precio-input text-center"
                                                         name="precios[{{ $producto->id }}][precio]"
                                                         value="{{ $producto->pivot->precio }}"
-                                                        data-producto-id="{{ $producto->id }}" placeholder="0.00">
+                                                        data-producto-id="{{ $producto->id }}" placeholder="0.00"
+                                                        @disabled($deudaGenerada)>
                                                     <input type="hidden"
                                                         name="precios[{{ $producto->id }}][producto_id]"
                                                         value="{{ $producto->id }}">
@@ -328,8 +342,7 @@
                                         <td colspan="3" class="text-center">
                                             <small class="text-muted">
                                                 <i class="ri-alert-line me-1"></i>
-                                                Esta acción actualizará la localidad y los pedidos pendientes del día del
-                                                último pedido registrado
+                                                Esta acción actualizará la localidad y el último pedido generado.
                                             </small>
                                         </td>
                                     </tr>
@@ -341,9 +354,15 @@
                         <button type="button" class="btn btn-soft-secondary btn-lg" data-bs-dismiss="modal">
                             <i class="ri-close-line me-1 align-bottom"></i> Cancelar
                         </button>
-                        <button type="submit" class="btn btn-warning btn-lg" id="btnActualizarPrecios">
-                            <i class="ri-save-line me-1 align-bottom"></i> Actualizar Precios del Día
-                        </button>
+                        @if ($deudaGenerada)
+                            <button type="button" class="btn btn-secondary btn-lg" disabled>
+                                <i class="ri-lock-line me-1 align-bottom"></i> Precios bloqueados por deuda generada
+                            </button>
+                        @else
+                            <button type="submit" class="btn btn-warning btn-lg" id="btnActualizarPrecios">
+                                <i class="ri-save-line me-1 align-bottom"></i> Actualizar Precios del Día
+                            </button>
+                        @endif
                     </div>
                 </form>
             </div>
@@ -642,6 +661,13 @@
 
                 if (isProcessing) {
                     console.log('Procesamiento en curso, ignorando solicitud');
+                    return false;
+                }
+
+                if ($(this).data('deuda') == 1) {
+                    showToast('error',
+                        'El último pedido de la localidad ya tiene deuda generada. No se pueden modificar los precios.'
+                    );
                     return false;
                 }
 
