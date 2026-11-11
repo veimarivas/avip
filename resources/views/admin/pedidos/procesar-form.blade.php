@@ -203,7 +203,7 @@
                                 <div class="mb-4">
                                     <h6 class="border-bottom pb-2">Otros Productos</h6>
                                     <div class="table-responsive">
-                                        <table class="table table-bordered table-hover table-sm">
+                                        <table class="table table-bordered table-hover table-sm procesar-otros-table">
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>Producto</th>
@@ -531,6 +531,31 @@
         </div>
     </div>
 @endsection
+
+@push('styles')
+    <style>
+        /* Mantener visible la columna Producto al desplazar la tabla horizontalmente */
+        .procesar-otros-table thead th:first-child,
+        .procesar-otros-table tbody td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            min-width: 190px;
+            max-width: 240px;
+            background: #ffffff;
+            box-shadow: 4px 0 8px -6px rgba(15, 36, 28, 0.45);
+        }
+
+        .procesar-otros-table thead th:first-child {
+            z-index: 4;
+            background: #f6f9f4;
+        }
+
+        .procesar-otros-table tbody tr:hover td:first-child {
+            background: #f4f8f2;
+        }
+    </style>
+@endpush
 
 @push('scripts')
     <script>
