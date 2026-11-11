@@ -121,7 +121,7 @@
                                                         name="pedido_productos[{{ $pedidoProducto->id }}][peso_pedido]"
                                                         value="{{ $pedidoProducto->peso_pedido }}">
                                                 </span>
-                                                <div id="peso-real-con-tara" class="alert alert-info">
+                                                <div class="alert alert-info peso-pedido-con-tara">
                                                     Peso Pedido:
                                                     {{ number_format($pedidoProducto->peso_pedido, 2) }} kg
                                                 </div>
