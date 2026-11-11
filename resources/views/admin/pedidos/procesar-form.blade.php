@@ -207,10 +207,22 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>Producto</th>
-                                                    <th width="120">Peso Pedido (kg)</th>
-                                                    <th width="120">Peso (kg)</th>
-                                                    <th width="120">Precio (Bs.)</th>
-                                                    <th width="120">Costo Total (Bs.)</th>
+                                                    <th width="120">
+                                                        <span class="d-none d-md-inline">Peso Pedido (kg)</span>
+                                                        <span class="d-md-none">Peso ped.</span>
+                                                    </th>
+                                                    <th width="120">
+                                                        <span class="d-none d-md-inline">Peso (kg)</span>
+                                                        <span class="d-md-none">Peso</span>
+                                                    </th>
+                                                    <th width="120">
+                                                        <span class="d-none d-md-inline">Precio (Bs.)</span>
+                                                        <span class="d-md-none">Precio</span>
+                                                    </th>
+                                                    <th width="120">
+                                                        <span class="d-none d-md-inline">Costo Total (Bs.)</span>
+                                                        <span class="d-md-none">Costo</span>
+                                                    </th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -553,6 +565,81 @@
 
         .procesar-otros-table tbody tr:hover td:first-child {
             background: #f4f8f2;
+        }
+
+        @media (max-width: 767.98px) {
+            .procesar-otros-table {
+                table-layout: fixed;
+                width: 100%;
+            }
+
+            .procesar-otros-table thead th,
+            .procesar-otros-table tbody td {
+                padding: 0.4rem 0.25rem;
+                font-size: 0.68rem;
+                vertical-align: middle;
+                white-space: normal;
+            }
+
+            .procesar-otros-table thead th {
+                font-size: 0.6rem;
+                letter-spacing: 0;
+                line-height: 1.15;
+            }
+
+            .procesar-otros-table thead th:first-child,
+            .procesar-otros-table tbody td:first-child {
+                width: 27%;
+                min-width: 0;
+                max-width: none;
+                padding-left: 0.2rem;
+                padding-right: 0.2rem;
+                box-shadow: none;
+                overflow-wrap: anywhere;
+                word-break: normal;
+            }
+
+            .procesar-otros-table thead th:nth-child(2),
+            .procesar-otros-table tbody td:nth-child(2) {
+                width: 15%;
+            }
+
+            .procesar-otros-table thead th:nth-child(3),
+            .procesar-otros-table tbody td:nth-child(3) {
+                width: 20%;
+            }
+
+            .procesar-otros-table thead th:nth-child(4),
+            .procesar-otros-table tbody td:nth-child(4) {
+                width: 20%;
+            }
+
+            .procesar-otros-table thead th:nth-child(5),
+            .procesar-otros-table tbody td:nth-child(5) {
+                width: 18%;
+            }
+
+            .procesar-otros-table .form-control-sm {
+                padding: 0.25rem 0.15rem;
+                font-size: 0.7rem;
+                text-align: center;
+            }
+
+            .procesar-otros-table .badge {
+                font-size: 0.62rem;
+                padding: 0.25em 0.35em;
+            }
+
+            .procesar-otros-table input[type="number"]::-webkit-outer-spin-button,
+            .procesar-otros-table input[type="number"]::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            .procesar-otros-table input[type="number"] {
+                -moz-appearance: textfield;
+                appearance: textfield;
+            }
         }
     </style>
 @endpush
