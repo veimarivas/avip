@@ -70,6 +70,11 @@
                         <h6 class="dropdown-header">{{ $headerUser->name ?? 'Mi cuenta' }}</h6>
                         <p class="px-3 pb-2 mb-0 small text-muted">{{ $headerUser->email ?? '' }}</p>
                         <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                            <i class="ri-user-settings-line fs-16 align-middle me-1"></i>
+                            <span class="align-middle">Mi perfil</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
                         <a class="dropdown-item text-danger" href="{{ route('admin.logout') }}">
                             <i class="ri-logout-box-r-line fs-16 align-middle me-1"></i>
                             <span class="align-middle">Cerrar sesión</span>

@@ -8,7 +8,6 @@ use App\Models\Persona;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
 class UsersController extends Controller
@@ -113,17 +112,14 @@ class UsersController extends Controller
 
         $user = User::findOrFail($request->id);
 
-        // Generar nueva contraseña aleatoria
-        $newPassword = Str::random(10);
+        // Contraseña estándar definida para el reinicio
+        $newPassword = '12345678';
         $user->password = Hash::make($newPassword);
         $user->save();
 
-        // Enviar correo con nueva contraseña (opcional)
-        // Mail::to($user->email)->send(new UserPasswordReset($newPassword));
-
         return response()->json([
             'success' => true,
-            'msg' => 'Contraseña restablecida correctamente.',
+            'msg' => 'Contraseña restablecida a 12345678.',
             'password' => $newPassword,
             'username' => $user->email
         ]);

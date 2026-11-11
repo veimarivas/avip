@@ -166,8 +166,10 @@
                 <div class="modal-body">
                     <div class="alert alert-warning mb-4">
                         <i class="ri-alert-line me-2"></i>
-                        Se generará una nueva contraseña aleatoria y se actualizará el usuario.
-                        <strong>Comunica esta nueva contraseña al usuario.</strong>
+                        La contraseña del usuario se restablecerá a
+                        <strong>12345678</strong>.
+                        <br>
+                        <strong>Comunica esta contraseña al usuario.</strong>
                     </div>
                     <form id="resetPasswordForm" class="forms-sample">
                         @csrf
@@ -177,7 +179,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="resetPasswordForm" class="btn btn-info resetBtn">
-                        <i class="ri-key-line me-1"></i> Generar Nueva Contraseña
+                        <i class="ri-key-line me-1"></i> Restablecer Contraseña
                     </button>
                 </div>
             </div>
@@ -191,7 +193,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-success bg-soft">
                     <h5 class="modal-title text-white" id="modalPasswordResultLabel">
-                        <i class="ri-check-line me-2"></i>Nueva Contraseña Generada
+                        <i class="ri-check-line me-2"></i>Contraseña Restablecida
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
@@ -223,8 +225,8 @@
                     </div>
                     <div class="alert alert-warning mt-3">
                         <i class="ri-alert-line me-2"></i>
-                        <strong>Recomendación:</strong> Solicita al usuario que cambie esta contraseña
-                        en su primer inicio de sesión.
+                        <strong>Recomendación:</strong> solicita al usuario que cambie esta contraseña
+                        desde su perfil.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -663,7 +665,7 @@
             });
 
             // Abrir modal para resetear contraseña
-            $(document).on('click', '.resetBtn', function() {
+            $(document).on('click', '.resetBtn[data-id]', function() {
                 const userId = $(this).data('id');
                 $('#userIdReset').val(userId);
             });
@@ -671,10 +673,10 @@
             // Resetear contraseña
             $('#resetPasswordForm').submit(function(e) {
                 e.preventDefault();
-                const submitBtn = $('.resetBtn');
+                const submitBtn = $('#modalResetPassword .resetBtn');
 
                 submitBtn.prop('disabled', true).html(
-                    '<i class="ri-loader-4-line spin me-1"></i> Generando...');
+                    '<i class="ri-loader-4-line spin me-1"></i> Restableciendo...');
 
                 $.ajax({
                     url: "{{ route('admin.users.reset-password') }}",
@@ -684,23 +686,32 @@
                         if (res.success) {
                             $('#usernameResult').val(res.username);
                             $('#passwordResult').val(res.password);
-                            $('#modalResetPassword').modal('hide');
-                            $('#modalPasswordResult').modal('show');
+
+                            const resetModalEl = document.getElementById('modalResetPassword');
+                            if (resetModalEl && typeof bootstrap !== 'undefined') {
+                                bootstrap.Modal.getOrCreateInstance(resetModalEl).hide();
+                            }
+
+                            const resultModalEl = document.getElementById('modalPasswordResult');
+                            if (resultModalEl && typeof bootstrap !== 'undefined') {
+                                bootstrap.Modal.getOrCreateInstance(resultModalEl).show();
+                            }
+
                             showNotification('success',
-                                'Contraseña restablecida correctamente');
+                                'Contraseña restablecida a 12345678');
                         } else {
                             showNotification('error', res.msg ||
                                 'Error al restablecer la contraseña');
                         }
                         submitBtn.prop('disabled', false).html(
-                            '<i class="ri-key-line me-1"></i> Generar Nueva Contraseña');
+                            '<i class="ri-key-line me-1"></i> Restablecer Contraseña');
                     },
                     error: function(xhr) {
                         const errorMsg = xhr.responseJSON?.msg ||
                             'Error al restablecer la contraseña';
                         showNotification('error', errorMsg);
                         submitBtn.prop('disabled', false).html(
-                            '<i class="ri-key-line me-1"></i> Generar Nueva Contraseña');
+                            '<i class="ri-key-line me-1"></i> Restablecer Contraseña');
                     }
                 });
             });
