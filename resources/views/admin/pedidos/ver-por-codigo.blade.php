@@ -291,6 +291,118 @@
                 position: static !important;
             }
         }
+
+        /* Pestañas de pedidos con color propio */
+        .pedido-tabs {
+            gap: 0.4rem;
+            border-bottom: 0;
+        }
+
+        .pedido-tab {
+            --pedido-tab-color: #3b7fb5;
+            --pedido-tab-soft: #eef5fb;
+            border: 1px solid rgba(59, 127, 181, 0.22) !important;
+            border-radius: 12px 12px 0 0 !important;
+            color: var(--pedido-tab-color) !important;
+            background: var(--pedido-tab-soft) !important;
+            font-weight: 800 !important;
+            transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .pedido-tab--regulares {
+            --pedido-tab-color: #3b7fb5;
+            --pedido-tab-soft: #eef5fb;
+            border-color: rgba(59, 127, 181, 0.22) !important;
+        }
+
+        .pedido-tab--frial {
+            --pedido-tab-color: #2b8a5a;
+            --pedido-tab-soft: #eaf6ee;
+            border-color: rgba(43, 138, 90, 0.22) !important;
+        }
+
+        .pedido-tab--sofia {
+            --pedido-tab-color: #c47a12;
+            --pedido-tab-soft: #fdf4e5;
+            border-color: rgba(196, 122, 18, 0.24) !important;
+        }
+
+        .pedido-tab:hover {
+            color: var(--pedido-tab-color) !important;
+            background: var(--pedido-tab-soft) !important;
+        }
+
+        .pedido-tabs .pedido-tab.active {
+            background: var(--pedido-tab-color) !important;
+            color: #ffffff !important;
+            border-color: var(--pedido-tab-color) !important;
+            box-shadow: 0 10px 20px -14px var(--pedido-tab-color);
+        }
+
+        .pedido-tab .badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: inherit !important;
+            font-weight: 800;
+        }
+
+        .pedido-tabs .pedido-tab.active .badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+        }
+
+        .pedido-pane {
+            --pedido-pane-color: #3b7fb5;
+            --pedido-pane-soft: #f5f9fd;
+            margin-top: 0;
+            padding: 1rem;
+            border-top: 3px solid var(--pedido-pane-color);
+            border-radius: 0 0 14px 14px;
+            background: var(--pedido-pane-soft);
+        }
+
+        .pedido-pane--regulares {
+            --pedido-pane-color: #3b7fb5;
+            --pedido-pane-soft: #f5f9fd;
+        }
+
+        .pedido-pane--frial {
+            --pedido-pane-color: #2b8a5a;
+            --pedido-pane-soft: #f4faf6;
+        }
+
+        .pedido-pane--sofia {
+            --pedido-pane-color: #c47a12;
+            --pedido-pane-soft: #fdf9f1;
+        }
+
+        .pedido-pane .table-responsive {
+            background: #ffffff;
+        }
+
+        @media (max-width: 767.98px) {
+            .pedido-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 0.35rem;
+            }
+
+            .pedido-tabs .nav-item {
+                flex: 0 0 auto;
+            }
+
+            .pedido-tab {
+                white-space: nowrap;
+                border-radius: 10px !important;
+                font-size: 0.76rem;
+            }
+
+            .pedido-pane {
+                padding: 0.75rem;
+                border-radius: 0 0 12px 12px;
+            }
+        }
     </style>
 
         <div class="avip-welcome">
@@ -406,21 +518,24 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <ul class="nav nav-tabs-custom card-header-tabs border-bottom-0" role="tablist">
+                        <ul class="nav nav-tabs-custom card-header-tabs border-bottom-0 pedido-tabs" role="tablist">
                             <li class="nav-item">
-                                <a class="nav-link active" data-bs-toggle="tab" href="#pedidosRegulares" role="tab">
+                                <a class="nav-link active pedido-tab pedido-tab--regulares" data-bs-toggle="tab"
+                                    href="#pedidosRegulares" role="tab">
                                     <i class="ri-shopping-cart-line me-1 align-middle"></i> Pedidos Regulares
                                     <span class="badge bg-primary ms-1">{{ $pedidosRegulares->total() }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#pedidosFrial" role="tab">
+                                <a class="nav-link pedido-tab pedido-tab--frial" data-bs-toggle="tab" href="#pedidosFrial"
+                                    role="tab">
                                     <i class="ri-restaurant-line me-1 align-middle"></i> Pedidos Frial
                                     <span class="badge bg-success ms-1">{{ $pedidosFrial->total() }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#pedidosFrialSofia" role="tab">
+                                <a class="nav-link pedido-tab pedido-tab--sofia" data-bs-toggle="tab"
+                                    href="#pedidosFrialSofia" role="tab">
                                     <i class="ri-store-line me-1 align-middle"></i> Pedidos Frial Sofia
                                     <span class="badge bg-info ms-1">{{ $pedidosFrialSofia->total() }}</span>
                                 </a>
@@ -430,7 +545,7 @@
                     <div class="card-body">
                         <div class="tab-content">
                             <!-- Pestaña Pedidos Regulares -->
-                            <div class="tab-pane active" id="pedidosRegulares" role="tabpanel">
+                            <div class="tab-pane active pedido-pane pedido-pane--regulares" id="pedidosRegulares" role="tabpanel">
                                 @include('admin.pedidos.partials.lista-pedidos', [
                                     'pedidos' => $pedidosRegulares,
                                     'tipoPedido' => 0,
@@ -447,7 +562,7 @@
                             </div>
 
                             <!-- Pestaña Pedidos Frial -->
-                            <div class="tab-pane" id="pedidosFrial" role="tabpanel">
+                            <div class="tab-pane pedido-pane pedido-pane--frial" id="pedidosFrial" role="tabpanel">
                                 @include('admin.pedidos.partials.lista-pedidos', [
                                     'pedidos' => $pedidosFrial,
                                     'tipoPedido' => 1,
@@ -464,7 +579,7 @@
                             </div>
 
                             <!-- Pestaña Pedidos Frial Sofia -->
-                            <div class="tab-pane" id="pedidosFrialSofia" role="tabpanel">
+                            <div class="tab-pane pedido-pane pedido-pane--sofia" id="pedidosFrialSofia" role="tabpanel">
                                 @include('admin.pedidos.partials.lista-pedidos', [
                                     'pedidos' => $pedidosFrialSofia,
                                     'tipoPedido' => 2,
@@ -486,3 +601,30 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Activar la pestaña indicada en el hash (#pedidosFrial, etc.)
+            const hash = window.location.hash;
+            if (hash) {
+                const trigger = document.querySelector(
+                    '.pedido-tabs .nav-link[data-bs-toggle="tab"][href="' + hash + '"]'
+                );
+                if (trigger && window.bootstrap) {
+                    bootstrap.Tab.getOrCreateInstance(trigger).show();
+                }
+            }
+
+            // Mantener el hash sincronizado al cambiar de pestaña
+            document.querySelectorAll('.pedido-tabs .nav-link[data-bs-toggle="tab"]').forEach(function(tab) {
+                tab.addEventListener('shown.bs.tab', function(event) {
+                    const target = event.target.getAttribute('href');
+                    if (target && history.replaceState) {
+                        history.replaceState(null, '', target);
+                    }
+                });
+            });
+        });
+    </script>
+@endpush

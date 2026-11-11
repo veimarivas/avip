@@ -2164,3 +2164,252 @@ body.avip-login {
         scroll-behavior: auto !important;
     }
 }
+
+/* ============================================================
+   Adaptación móvil global
+   ============================================================ */
+
+html,
+body {
+    max-width: 100%;
+}
+
+.page-content,
+.page-content .container-fluid,
+.card,
+.card-body,
+.card-header {
+    min-width: 0;
+}
+
+.card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.card-header > .card-title,
+.card-header > h4,
+.card-header > h5 {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.page-title-box {
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.avip-welcome {
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.avip-welcome > * {
+    min-width: 0;
+}
+
+.avip-kpi__label,
+.avip-kpi__value,
+.avip-kpi__hint {
+    overflow-wrap: anywhere;
+}
+
+.table-responsive {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive > .table {
+    margin-bottom: 0;
+}
+
+.nav-tabs,
+.nav-tabs-custom {
+    scrollbar-width: thin;
+}
+
+@media (max-width: 991.98px) {
+    .nav-tabs,
+    .nav-tabs-custom {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.25rem;
+    }
+
+    .nav-tabs .nav-item,
+    .nav-tabs-custom .nav-item {
+        flex: 0 0 auto;
+    }
+
+    .nav-tabs .nav-link,
+    .nav-tabs-custom .nav-link {
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .page-content {
+        padding-left: 0.85rem;
+        padding-right: 0.85rem;
+        padding-bottom: 2rem;
+    }
+
+    .page-title-box {
+        margin-bottom: 1rem;
+    }
+
+    .page-title-box h4 {
+        font-size: 1.3rem !important;
+        line-height: 1.25;
+    }
+
+    .page-title-box .breadcrumb {
+        flex-wrap: wrap;
+        font-size: 0.72rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-header {
+        padding: 0.85rem 1rem;
+    }
+
+    .card-header .btn,
+    .page-title-box .btn {
+        flex: 0 0 auto;
+    }
+
+    .row.g-3 {
+        --vz-gutter-x: 0.75rem;
+        --vz-gutter-y: 0.75rem;
+    }
+
+    .modal-dialog {
+        margin: 0.6rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .modal-footer .btn {
+        flex: 1 1 auto;
+    }
+
+    .avip-welcome {
+        padding: 1.1rem;
+    }
+
+    .avip-kpi {
+        padding: 0.9rem;
+    }
+
+    .avip-kpi__icon {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+        font-size: 1rem;
+    }
+
+    .avip-kpi__value {
+        font-size: 1.35rem;
+    }
+
+    .avip-kpi__label {
+        font-size: 0.6rem;
+    }
+
+    .dropdown-menu {
+        max-width: min(92vw, 340px);
+    }
+
+    .d-flex.justify-content-end,
+    .d-flex.justify-content-between {
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        white-space: normal;
+    }
+
+    .btn-sm {
+        white-space: nowrap;
+    }
+
+    .table > :not(caption) > * > * {
+        padding: 0.6rem 0.65rem;
+        font-size: 0.82rem;
+    }
+
+    .table thead th {
+        font-size: 0.68rem;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 16px;
+    }
+
+    .input-group > .form-control,
+    .input-group > .form-select {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .page-title-box h4 {
+        font-size: 1.18rem !important;
+    }
+
+    .page-title-box .page-title-right {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .avip-welcome h1 {
+        font-size: 1.4rem;
+    }
+
+    .avip-kpi__value {
+        font-size: 1.2rem;
+    }
+
+    .modal-dialog {
+        margin: 0.4rem;
+    }
+
+    .modal-body {
+        padding: 0.9rem;
+    }
+
+    .btn {
+        font-size: 0.82rem;
+    }
+
+    .btn-group {
+        display: inline-flex;
+        flex-wrap: wrap;
+    }
+
+    .toast-container {
+        left: 0.5rem;
+        right: 0.5rem;
+        width: auto;
+    }
+
+    .toast-container .avip-toast {
+        min-width: 0;
+        max-width: 100%;
+    }
+}

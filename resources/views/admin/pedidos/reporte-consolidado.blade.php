@@ -57,7 +57,7 @@
         <!-- Botones de exportación -->
         <div class="row mt-3">
             <div class="col-12">
-                <div class="d-flex justify-content-end gap-2">
+                <div class="d-flex justify-content-end gap-2 flex-wrap">
                     @foreach ($tipos as $tipoId => $tipoNombre)
                         <form action="{{ route('admin.pedidos.reporte-consolidado-pdf') }}" method="POST" target="_blank">
                             @csrf
