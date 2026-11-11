@@ -382,12 +382,13 @@ class LocalidadesController extends Controller
                     ->where('producto_id', $productoId)
                     ->whereBetween('created_at', [$inicioFecha, $finFecha])
                     ->where(function ($query) {
-                        $query->whereNull('realizado')
-                            ->orWhere('realizado', '!=', '1');
-                    })
-                    ->where(function ($query) {
-                        $query->whereNull('procesado')
-                            ->orWhere('procesado', '!=', '1');
+                        // Actualizar todo lo que NO esté completamente procesado
+                        // (realizado = 1 Y procesado = 1).
+                        $query->where(function ($q) {
+                            $q->whereNull('realizado')->orWhere('realizado', '!=', '1');
+                        })->orWhere(function ($q) {
+                            $q->whereNull('procesado')->orWhere('procesado', '!=', '1');
+                        });
                     })
                     ->update(['precio' => $nuevoPrecio]);
 
