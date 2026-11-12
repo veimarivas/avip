@@ -38,8 +38,8 @@
         <table class="table table-bordered table-hover table-sm">
             <thead class="table-light sticky-top">
                 <tr>
-                    <th class="sticky-left bg-light" width="50">#</th>
-                    <th class="sticky-left bg-light" width="200">Cliente</th>
+                    <th class="bg-light" width="50">#</th>
+                    <th class="sticky-left cliente-col" width="200">Cliente</th>
                     <th class="sticky-right bg-light" width="150">Acciones</th>
                     @foreach ($productos as $producto)
                         <th class="text-center" width="120">
@@ -71,8 +71,8 @@
                         }
                     @endphp
                     <tr>
-                        <td class="sticky-left bg-white">{{ $index + 1 }}</td>
-                        <td class="sticky-left bg-white">
+                        <td class="bg-white">{{ $index + 1 }}</td>
+                        <td class="sticky-left cliente-col">
                             <strong>{{ $pedido->cliente->nombres }} {{ $pedido->cliente->apellidos }}</strong>
                             <br>
                             <small class="text-muted">{{ $pedido->cliente->ci }}</small>
@@ -288,10 +288,18 @@
         background-color: inherit;
     }
 
-    /* La segunda columna fija debe empezar después de la primera (#) */
-    thead th.sticky-left:nth-child(2),
-    tbody td.sticky-left:nth-child(2) {
-        left: 50px;
+    .cliente-col {
+        background-color: #eef6f0 !important;
+        box-shadow: 2px 0 6px -4px rgba(15, 36, 28, 0.35);
+    }
+
+    thead th.cliente-col {
+        background-color: #e6f1e9 !important;
+        z-index: 4 !important;
+    }
+
+    thead th.sticky-right {
+        z-index: 4 !important;
     }
 
     .sticky-right {
