@@ -204,7 +204,8 @@
 
                 <!-- Fila de totales -->
                 <tr style="background-color: #f8f9fa; font-weight: bold;">
-                    <td class="bg-light" colspan="3" style="text-align: center;">Total</td>
+                    <td class="sticky-left bg-light" style="text-align: center; white-space: nowrap;" title="Total">Total</td>
+                    <td class="bg-light" colspan="2"></td>
                     @foreach ($productos as $producto)
                         @php
                             $totalProducto = 0;
@@ -229,7 +230,9 @@
 
                 <!-- ✅ NUEVA FILA: Cantidad de Cajas -->
                 <tr style="background-color: #e9ecef; font-weight: bold; border-top: 2px solid #dee2e6;">
-                    <td class="bg-light" colspan="3" style="text-align: center;">Cantidad de Cajas</td>
+                    <td class="sticky-left bg-light" style="text-align: center; white-space: nowrap;"
+                        title="Cantidad de Cajas">Cajas</td>
+                    <td class="bg-light" colspan="2"></td>
                     @foreach ($productos as $producto)
                         @php
                             $totalProducto = 0;
@@ -302,15 +305,6 @@
         position: sticky;
         top: 0;
         z-index: 3;
-    }
-
-    @media (max-width: 767.98px) {
-        /* En móvil ninguna columna queda fija: así los nombres y totales
-           de cada producto se ven completos al desplazarse. */
-        .sticky-left,
-        .sticky-right {
-            position: static;
-        }
     }
 
     thead th {
