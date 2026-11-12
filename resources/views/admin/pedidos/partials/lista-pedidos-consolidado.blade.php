@@ -204,7 +204,7 @@
 
                 <!-- Fila de totales -->
                 <tr style="background-color: #f8f9fa; font-weight: bold;">
-                    <td class="sticky-left bg-light" colspan="3" style="text-align: center;">Total</td>
+                    <td class="bg-light" colspan="3" style="text-align: center;">Total</td>
                     @foreach ($productos as $producto)
                         @php
                             $totalProducto = 0;
@@ -229,7 +229,7 @@
 
                 <!-- ✅ NUEVA FILA: Cantidad de Cajas -->
                 <tr style="background-color: #e9ecef; font-weight: bold; border-top: 2px solid #dee2e6;">
-                    <td class="sticky-left bg-light" colspan="3" style="text-align: center;">Cantidad de Cajas</td>
+                    <td class="bg-light" colspan="3" style="text-align: center;">Cantidad de Cajas</td>
                     @foreach ($productos as $producto)
                         @php
                             $totalProducto = 0;
@@ -285,6 +285,12 @@
         background-color: inherit;
     }
 
+    /* La segunda columna fija debe empezar después de la primera (#) */
+    thead th.sticky-left:nth-child(2),
+    tbody td.sticky-left:nth-child(2) {
+        left: 50px;
+    }
+
     .sticky-right {
         position: sticky;
         right: 0;
@@ -296,6 +302,18 @@
         position: sticky;
         top: 0;
         z-index: 3;
+    }
+
+    @media (max-width: 767.98px) {
+        /* En móvil solo se fija la columna #; las demás se desplazan
+           para poder ver los totales de cada producto. */
+        .sticky-right {
+            position: static;
+        }
+
+        .sticky-left:not(:first-child) {
+            position: static;
+        }
     }
 
     thead th {
