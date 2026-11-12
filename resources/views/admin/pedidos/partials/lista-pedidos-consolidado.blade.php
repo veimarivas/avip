@@ -305,13 +305,10 @@
     }
 
     @media (max-width: 767.98px) {
-        /* En móvil solo se fija la columna #; las demás se desplazan
-           para poder ver los totales de cada producto. */
+        /* En móvil ninguna columna queda fija: así los nombres y totales
+           de cada producto se ven completos al desplazarse. */
+        .sticky-left,
         .sticky-right {
-            position: static;
-        }
-
-        .sticky-left:not(:first-child) {
             position: static;
         }
     }
